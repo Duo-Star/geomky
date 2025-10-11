@@ -2,6 +2,8 @@
 
 GeoMKY
 
+<a><img src="logo-1.png" height="360px"/></a>
+
 ## Getting Started
 
 _This project is a starting point for a Flutter application.
