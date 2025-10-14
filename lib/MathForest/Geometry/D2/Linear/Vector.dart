@@ -6,7 +6,8 @@
 
 import 'dart:math' as math;
 import 'dart:ui'; // we need Offset in ui
-
+import '../../../Algebra/Functions/Main.dart' as funcs;
+import '../../D3/Linear/Vec3.dart';
 
 class Vector {
   num x = 0.0;
@@ -76,7 +77,10 @@ class Vector {
   Vector roll270() => Vector(y, -x);
 
   //叉积模长
-  num crossLen(Vector other) =>x * other.y - y * other.x;
+  num crossLen(Vector other) => funcs.abs(x * other.y - y * other.x);
+
+  //叉积数值
+  num crossNum(Vector other) => (x * other.y - y * other.x);
 
   // 复制一份
   Vector copy() => Vector(x, y);
@@ -94,6 +98,10 @@ class Vector {
 
   // 模
   num get len => math.sqrt(x * x + y * y);
+
+  num get lenPow2 => x * x + y * y;
+
+  Vec3 get vec3 => Vec3(x, y, 0.0);
 
   // 计算单位向量
   Vector get unit => len > 0 ? this / len : Vector.zero;

@@ -1,36 +1,103 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+
+import 'MathForest/Geometry/D2/GMK/Monxiv/main.dart';
+import 'MathForest/Geometry/D2/Linear/Vector.dart';
+import 'MathForest/Geometry/D2/Linear/Dots.dart';
+import 'MathForest/Geometry/D2/Linear/Polygon.dart';
+import 'MathForest/Statistics/RandomMaster.dart';
+import 'MathForest/Physics/Parbase/Particle.dart';
+import 'MathForest/Geometry/D3/Linear/Vec3.dart';
+import 'MathForest/Physics/Parbase/links/Spring.dart';
+import 'MathForest/Physics/Parbase/links/Friction.dart';
+
 
 void main() {
   runApp(const MyApp());
 }
 
+// 物理状态类 - 用于在物理模拟和绘图之间传递数据
+class PhysicsState {
+  List<Particle> particles = [];
+  List<Polygon> shapes = [];
+  double time = 0.0;
+
+  // 添加其他你需要的物理变量...
+  Vector gravity = Vector(0, -1);
+  List<Dots> dynamicDots = [];
+
+  PhysicsState();
+
+  // 复制方法，用于在状态更新时保持引用不变
+  PhysicsState copy() {
+    final newState = PhysicsState();
+    newState.particles = List<Particle>.from(particles);
+    newState.shapes = List<Polygon>.from(shapes);
+    newState.time = time;
+    newState.gravity = gravity;
+    newState.dynamicDots = List<Dots>.from(dynamicDots);
+    return newState;
+  }
+}
+
+class MyPainter extends CustomPainter {
+  final Monxiv monxiv;
+  final PhysicsState physicsState; // 接收物理状态
+
+  MyPainter({required this.monxiv, required this.physicsState});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    monxiv.setSize(size);
+    monxiv.drawFramework(canvas);
+
+    // 绘制静态内容
+    Dots ds = Dots.randomFill(
+      5,
+      RandomMaster.normal(mean: 0, stddev: 1.0),
+      RandomMaster.normal(mean: 0, stddev: 1.0),
+    );
+    // Polygon polygon = ds.tight;
+    // monxiv.drawDots(ds, canvas);
+    // monxiv.drawPolygon(polygon, canvas);
+
+    // monxiv.drawPolygon(Polygon([Vector(), Vector(1), Vector(0, 1)]), canvas);
+    monxiv.drawPoint(Vector(), canvas);
+
+    // 绘制物理模拟的动态内容
+    _drawPhysicsContent(canvas);
+  }
+
+  void _drawPhysicsContent(Canvas canvas) {
+    // 绘制粒子
+    for (final particle in physicsState.particles) {
+      monxiv.drawPoint(particle.p.vec2, canvas);
+    }
+
+    // 绘制形状
+    for (final shape in physicsState.shapes) {
+      monxiv.drawPolygon(shape, canvas);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant MyPainter oldDelegate) {
+    return monxiv != oldDelegate.monxiv ||
+        physicsState != oldDelegate.physicsState;
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'GeoMKY',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'GeoMKY'),
     );
   }
 }
@@ -38,85 +105,208 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MyHomePageState extends State<MyHomePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Timer _physicsTimer;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  // 使用Monxiv管理视图变换
+  Monxiv monxiv = Monxiv()
+    ..reset()
+    ..infoMode = false;
+
+  // 物理状态
+  PhysicsState _physicsState = PhysicsState();
+
+  // 物理模拟参数
+  static const double fixedDt = 0.008;
+  static const double physicsTimeStep = fixedDt;
+  double _accumulator = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 初始化物理状态
+    _initializePhysics();
+
+    // 持续重绘的动画控制器
+    _animationController = AnimationController(
+      duration: const Duration(days: 114514),
+      vsync: this,
+    )..repeat();
+
+    // 监听动画帧，用于重绘
+    _animationController.addListener(() {
+      setState(() {});
     });
+
+    // 固定时间步长的物理定时器
+    _physicsTimer = Timer.periodic(
+      Duration(milliseconds: (physicsTimeStep * 1000).round()),
+      _updatePhysics,
+    );
+  }
+
+  void _initializePhysics() {
+    // 在这里初始化你的物理世界
+    // 例如：添加一些测试粒子
+    _physicsState.particles.addAll([
+      Particle(Vec3(), Vec3(), Vec3()),
+      Particle(Vec3(0,1), Vec3(.1), Vec3()),
+      Particle(Vec3(0,2), Vec3(), Vec3())
+    ]);
+
+    // 添加测试形状
+    _physicsState.shapes.add(Polygon([Vector(-1, -1), Vector(1, -1), Vector(1, 1), Vector(-1, 1)]),);
+
+
+  }
+
+  void _updatePhysics(Timer timer) {
+    // 固定时间步长的物理更新
+    _accumulator += physicsTimeStep;
+
+    // 更新物理状态
+    final newState = _physicsState.copy();
+
+    // ===== 在这里编写你的物理模拟代码 =====
+    _runPhysicsSimulation(newState, physicsTimeStep);
+    // ===================================
+
+    // 更新状态（在下一帧绘制时生效）
+    setState(() {
+      _physicsState = newState;
+    });
+  }
+
+  void _runPhysicsSimulation(PhysicsState state, double dt) {
+
+
+    Spring sp = Spring(1e4, 1);
+
+    Vec3 gf = Vec3(0,-3);
+    Friction airFr = Friction(1, .08, 'Air');
+
+    state.particles[0].p = Vec3();
+
+    Vec3 f01 = sp.pLINKp(state.particles[0], state.particles[1]);
+    Vec3 f12 = sp.pLINKp(state.particles[1], state.particles[2]);
+
+    state.particles[1].setF(f01 - f12 + gf + airFr.pLINK(state.particles[1]));
+
+    state.particles[2].setF(f12 + gf + airFr.pLINK(state.particles[2]));
+
+    state.particles[1].update(dt);
+    state.particles[2].update(dt);
+
+    state.shapes[0] = Polygon([state.particles[0].p.vec2,
+      state.particles[1].p.vec2,
+      state.particles[2].p.vec2,
+      state.particles[1].p.vec2,
+    ]);
+
+    state.time += dt;
+
+  }
+
+  @override
+  void dispose() {
+    _physicsTimer.cancel();
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      body: Stack(
+        children: [
+          Listener(
+            onPointerSignal: monxiv.handlePointerSignal,
+            child: GestureDetector(
+              onScaleStart: monxiv.handleScaleStart,
+              onScaleUpdate: monxiv.handleScaleUpdate,
+              onScaleEnd: monxiv.handleScaleEnd,
+              onDoubleTap: monxiv.handleDoubleTap,
+              onTap: monxiv.onTap,
+              onTapDown: monxiv.onTapDown,
+
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return CustomPaint(
+                    painter: MyPainter(
+                      monxiv: monxiv,
+                      physicsState: _physicsState, // 传递物理状态给绘图器
+                    ),
+                    size: Size(constraints.maxWidth, constraints.maxHeight),
+                  );
+                },
+              ),
             ),
-          ],
-        ),
+          ),
+
+          Container(
+            height: 50,
+            color: Colors.blueGrey[100],
+            child: DefaultTabController(
+              initialIndex: 3,
+              length: 8,
+              child: Scaffold(
+                appBar: AppBar(
+                  title: const Text('GeoMKY - welcome pakoo lib'),
+                  actions: <Widget>[
+                    IconButton(
+                      icon: const Icon(Icons.add_alert),
+                      tooltip: 'Show Snackbar',
+                      onPressed: () {
+                        //hihi();
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.file_copy_outlined),
+                      tooltip: 'Show Snackbar',
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('This is a snackbar')),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.navigate_next),
+                      tooltip: 'Go to the next page',
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute<void>(
+                            builder: (BuildContext context) {
+                              return Scaffold(
+                                appBar: AppBar(title: const Text('Next page')),
+                                body: const Center(
+                                  child: Text(
+                                    'This is the next page',
+                                    style: TextStyle(fontSize: 24),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

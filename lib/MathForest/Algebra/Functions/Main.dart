@@ -22,6 +22,13 @@ sgn(x){ //
   }
 }
 
+abs(x){
+  if (x<0){
+    return -x;
+  }
+  return x;
+}
+
 sinh( x) { // 双曲正弦函数
   return (math.exp(x) - math.exp(-x)) / 2;
 }
@@ -71,6 +78,13 @@ num mod(num x, num y) => x- floor(x/y)*y;
 
 //
 num pow(num x, num y) => math.pow(x, y);
+
+// 开放正数
+num openPNum(num x) => (x>0) ? x : 0;
+
+// 开放负数
+num openNNum(num x) => (x<0) ? x : 0;
+
 
 // 计算阶乘
 int factorial(int n) {

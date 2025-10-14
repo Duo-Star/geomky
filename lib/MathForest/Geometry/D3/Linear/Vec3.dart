@@ -1,7 +1,7 @@
 //Vec
 import 'dart:math' as math;
 import 'dart:ui';
-
+import '../../D2/Linear/Vector.dart';
 import 'Direction.dart';
 
 class Vec3 {
@@ -103,6 +103,8 @@ class Vec3 {
   num dis(Vec3 other) => (this - other).len;
 
   Vec3 angB(Vec3 other) => (unit + other.unit);
+
+  Vector get vec2 => Vector(x, y);
 
   @override
   String toString() => 'Vec($x, $y, $z)';
