@@ -56,7 +56,7 @@ class Monxiv {
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.0;
 
-  Color bgc = Color.fromARGB(255, 230, 230, 230);
+  Color bgc = Color.fromARGB(200, 230, 230, 230);
 
   Vector c2s(Vector c) {
     return Vector(c.x * lam + p.x, -c.y * lam + p.y);
@@ -66,8 +66,8 @@ class Monxiv {
     return Vector((s.x - p.x) / lam, -(s.y - p.y) / lam);
   }
 
-  void reset() {
-    p = Vector(150, 150);
+  void reset([Vector? v]) {
+    p =v?? Vector(150, 150);
     lam = 100;
   }
 

@@ -8,8 +8,8 @@ void main() {
   runApp(const MyApp());
 }
 
-// 物理状态类 - 用于在物理模拟和绘图之间传递数据
-class PhysicsState {
+// 状态类 - 用于在GMK运算和绘图之间传递数据
+class GMKState {
   List<Particle> particles = [];
   List<Polygon> shapes = [];
   double time = 0.0;
@@ -18,11 +18,11 @@ class PhysicsState {
   Vector gravity = Vector(0, -1);
   List<Dots> dynamicDots = [];
 
-  PhysicsState();
+  GMKState();
 
   // 复制方法，用于在状态更新时保持引用不变
-  PhysicsState copy() {
-    final newState = PhysicsState();
+  GMKState copy() {
+    final newState = GMKState();
     newState.particles = List<Particle>.from(particles);
     newState.shapes = List<Polygon>.from(shapes);
     newState.time = time;
@@ -34,7 +34,7 @@ class PhysicsState {
 
 class MyPainter extends CustomPainter {
   final Monxiv monxiv;
-  final PhysicsState physicsState; // 接收物理状态
+  final GMKState physicsState; // 接收物理状态
 
   MyPainter({required this.monxiv, required this.physicsState});
 
@@ -49,11 +49,11 @@ class MyPainter extends CustomPainter {
       RandomMaster.normal(mean: 0, stddev: 1.0),
       RandomMaster.normal(mean: 0, stddev: 1.0),
     );
-    // Polygon polygon = ds.tight;
-    // monxiv.drawDots(ds, canvas);
-    // monxiv.drawPolygon(polygon, canvas);
+    Polygon polygon = ds.tight;
+    monxiv.drawDots(ds, canvas);
+    monxiv.drawPolygon(polygon, canvas);
 
-    // monxiv.drawPolygon(Polygon([Vector(), Vector(1), Vector(0, 1)]), canvas);
+    monxiv.drawPolygon(Polygon([Vector(), Vector(1), Vector(0, 1)]), canvas);
     monxiv.drawPoint(Vector(), canvas);
 
     // 绘制物理模拟的动态内容
@@ -88,7 +88,7 @@ class MyApp extends StatelessWidget {
       title: 'GeoMKY',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color.fromARGB(255,230,228,186),
+          seedColor: Color.fromARGB(255, 230, 228, 186),
         ),
       ),
       home: const MyHomePage(title: 'GeoMKY'),
@@ -112,11 +112,11 @@ class _MyHomePageState extends State<MyHomePage>
 
   // 使用Monxiv管理视图变换
   Monxiv monxiv = Monxiv()
-    ..reset()
+    ..reset(Vector(250, 250))
     ..infoMode = false;
 
   // 物理状态
-  PhysicsState _physicsState = PhysicsState();
+  GMKState _gmkState = GMKState();
 
   // 物理模拟参数
   static const double fixedDt = 0.008;
@@ -127,8 +127,10 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
 
+    //var a = Theme.of(context).colorScheme.primaryContainer;
+
     // 初始化物理状态
-    _initializePhysics();
+    _initializeGMK();
 
     // 持续重绘的动画控制器
     _animationController = AnimationController(
@@ -144,43 +146,43 @@ class _MyHomePageState extends State<MyHomePage>
     // 固定时间步长的物理定时器
     _physicsTimer = Timer.periodic(
       Duration(milliseconds: (physicsTimeStep * 1000).round()),
-      _updatePhysics,
+      _updateGMK,
     );
   }
 
-  void _initializePhysics() {
+  void _initializeGMK() {
     // 在这里初始化你的物理世界
     // 例如：添加一些测试粒子
-    _physicsState.particles.addAll([
+    _gmkState.particles.addAll([
       Particle(Vec3(), Vec3(), Vec3()),
       Particle(Vec3(0, 1), Vec3(.1), Vec3()),
       Particle(Vec3(0, 2), Vec3(), Vec3()),
     ]);
 
     // 添加测试形状
-    _physicsState.shapes.add(
+    _gmkState.shapes.add(
       Polygon([Vector(-1, -1), Vector(1, -1), Vector(1, 1), Vector(-1, 1)]),
     );
   }
 
-  void _updatePhysics(Timer timer) {
+  void _updateGMK(Timer timer) {
     // 固定时间步长的物理更新
     _accumulator += physicsTimeStep;
 
     // 更新物理状态
-    final newState = _physicsState.copy();
+    final newState = _gmkState.copy();
 
     // ===== 在这里编写你的物理模拟代码 =====
-    _runPhysicsSimulation(newState, physicsTimeStep);
+    _runGMK(newState, physicsTimeStep);
     // ===================================
 
     // 更新状态（在下一帧绘制时生效）
     setState(() {
-      _physicsState = newState;
+      _gmkState = newState;
     });
   }
 
-  void _runPhysicsSimulation(PhysicsState state, double dt) {
+  void _runGMK(GMKState state, double dt) {
     Spring sp = Spring(1e4, 1);
 
     Vec3 gf = Vec3(0, -3);
@@ -208,6 +210,37 @@ class _MyHomePageState extends State<MyHomePage>
     state.time += dt;
   }
 
+  Card debugZone(String title, String subTitle, Function todo) {
+    return Card(
+      margin: EdgeInsets.all(10),
+      elevation: 3.0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.ac_unit_rounded),
+              title: Text(title),
+              subtitle: Text(subTitle),
+              trailing: IconButton(
+                onPressed: () {
+                  String s = todo();
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('调试台：\n$s')));
+                },
+                icon: const Icon(Icons.accessibility_new_rounded),
+                tooltip: '调试',
+              ),
+            ),
+            // ... 其他内容
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     _physicsTimer.cancel();
@@ -217,6 +250,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
+    monxiv.bgc = Theme.of(context).colorScheme.primaryContainer.withAlpha(30);
     return Scaffold(
       body: Stack(
         children: [
@@ -235,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage>
                   return CustomPaint(
                     painter: MyPainter(
                       monxiv: monxiv,
-                      physicsState: _physicsState, // 传递物理状态给绘图器
+                      physicsState: _gmkState, // 传递物理状态给绘图器
                     ),
                     size: Size(constraints.maxWidth, constraints.maxHeight),
                   );
@@ -254,7 +288,6 @@ class _MyHomePageState extends State<MyHomePage>
                 appBar: AppBar(
                   title: const Text('GeoMKY - 最小测试单元'),
                   actions: <Widget>[
-
                     PopupMenuButton<String>(
                       onSelected: (value) {
                         print('选择了: $value');
@@ -274,7 +307,10 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ],
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primary, // 按钮背景色
                           borderRadius: BorderRadius.circular(8),
@@ -375,7 +411,10 @@ class _MyHomePageState extends State<MyHomePage>
                         ),
                       ],
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(8),
@@ -384,7 +423,9 @@ class _MyHomePageState extends State<MyHomePage>
                           TextSpan(
                             text: '新',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             ),
                           ),
                         ),
@@ -446,10 +487,12 @@ class _MyHomePageState extends State<MyHomePage>
                           value: 'settings',
                           child: Text('投影'),
                         ),
-
                       ],
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(8),
@@ -458,7 +501,9 @@ class _MyHomePageState extends State<MyHomePage>
                           TextSpan(
                             text: '构造',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             ),
                           ),
                         ),
@@ -492,10 +537,12 @@ class _MyHomePageState extends State<MyHomePage>
                           value: 'settings',
                           child: Text('短轴端点'),
                         ),
-
                       ],
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.primaryContainer,
                           borderRadius: BorderRadius.circular(8),
@@ -504,7 +551,9 @@ class _MyHomePageState extends State<MyHomePage>
                           TextSpan(
                             text: '属性',
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onPrimaryContainer,
                             ),
                           ),
                         ),
@@ -522,21 +571,29 @@ class _MyHomePageState extends State<MyHomePage>
                           MaterialPageRoute<void>(
                             builder: (BuildContext context) {
                               return Scaffold(
-                                appBar: AppBar(title: const Text('Debug Library')),
+                                appBar: AppBar(
+                                  title: const Text('Debug Library'),
+                                ),
                                 body: ListView(
                                   children: [
                                     Card(
-                                      margin: EdgeInsets.all(10), // 建议添加外边距，使卡片间有间隔[1](@ref)
+                                      margin: EdgeInsets.all(
+                                        10,
+                                      ), // 建议添加外边距，使卡片间有间隔[1](@ref)
                                       elevation: 3.0,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6.0),
+                                        borderRadius: BorderRadius.circular(
+                                          6.0,
+                                        ),
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(16.0),
                                         child: Column(
                                           children: [
                                             ListTile(
-                                              leading: const Icon(Icons.ac_unit_rounded),
+                                              leading: const Icon(
+                                                Icons.ac_unit_rounded,
+                                              ),
                                               title: const Text('你会点下它吗'),
                                               subtitle: const Text('awa'),
                                               trailing: IconButton(
@@ -545,14 +602,22 @@ class _MyHomePageState extends State<MyHomePage>
                                                   void m(String str) {
                                                     msg = '$msg\n$str';
                                                   }
+
                                                   m('欢迎找我玩');
                                                   m('Duo-113530014');
                                                   m('QQ-Group-663251235');
                                                   ScaffoldMessenger.of(
                                                     context,
-                                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(msg),
+                                                    ),
+                                                  );
                                                 },
-                                                icon: const Icon(Icons.accessibility_new_rounded),
+                                                icon: const Icon(
+                                                  Icons
+                                                      .accessibility_new_rounded,
+                                                ),
                                                 tooltip: '调试',
                                               ),
                                             ),
@@ -561,20 +626,27 @@ class _MyHomePageState extends State<MyHomePage>
                                         ),
                                       ),
                                     ),
+
                                     Card(
-                                      margin: EdgeInsets.all(10), // 建议添加外边距，使卡片间有间隔[1](@ref)
+                                      margin: EdgeInsets.all(10),
                                       elevation: 3.0,
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6.0),
+                                        borderRadius: BorderRadius.circular(
+                                          6.0,
+                                        ),
                                       ),
                                       child: Padding(
                                         padding: const EdgeInsets.all(16.0),
                                         child: Column(
                                           children: [
                                             ListTile(
-                                              leading: const Icon(Icons.ac_unit_rounded),
+                                              leading: const Icon(
+                                                Icons.ac_unit_rounded,
+                                              ),
                                               title: const Text('参数列解析器'),
-                                              subtitle: const Text('GMKCompiler.str2Factor'),
+                                              subtitle: const Text(
+                                                'GMKCompiler.str2Factor',
+                                              ),
                                               trailing: IconButton(
                                                 onPressed: () {
                                                   String msg = '控制台';
@@ -582,25 +654,45 @@ class _MyHomePageState extends State<MyHomePage>
                                                     msg = '$msg\n$str';
                                                   }
 
+                                                  void lll([String? str]) {
+                                                    msg =
+                                                        '$msg\n-----------|${str ?? ''}|-----------';
+                                                  }
+
                                                   String str =
                                                       '1, 1.23, .PI, .NAN, .INF,  a, <b>, .T, <3,4>, <1.23, 4.56>, <.PI, .PI>, <.NAN, .INF>, .I;';
                                                   m('-----------原始-----------');
                                                   m(str);
 
-                                                  m('-----------参数列-----------');
-                                                  List<dynamic> fac = GMKCompiler.str2Factor(str);
+                                                  m(
+                                                    '-----------参数列-----------',
+                                                  );
+                                                  List<dynamic> fac =
+                                                      GMKCompiler.str2Factor(
+                                                        str,
+                                                      );
                                                   for (var item in fac) {
-                                                    m('$item, type:${item.runtimeType}');
+                                                    m(
+                                                      '$item, type:${item.runtimeType}',
+                                                    );
                                                   }
 
                                                   m('-----------还原-----------');
-                                                  m(GMKCompiler.factor2Str(fac));
+                                                  m(
+                                                    GMKCompiler.factor2Str(fac),
+                                                  );
                                                   ScaffoldMessenger.of(
                                                     context,
-                                                  ).showSnackBar(SnackBar(content: Text(msg)));
-
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(msg),
+                                                    ),
+                                                  );
                                                 },
-                                                icon: const Icon(Icons.accessibility_new_rounded),
+                                                icon: const Icon(
+                                                  Icons
+                                                      .accessibility_new_rounded,
+                                                ),
                                                 tooltip: '调试',
                                               ),
                                             ),
@@ -610,7 +702,35 @@ class _MyHomePageState extends State<MyHomePage>
                                       ),
                                     ),
 
+                                    debugZone('GMK编译', 'GMKCompiler', () {
+                                      String msg = '控制台';
+                                      void m(String str) {
+                                        msg = '$msg\n$str';
+                                      }
 
+                                      void lll([String? str]) {
+                                        msg =
+                                            '$msg\n-----------|${str ?? ''}|-----------';
+                                      }
+
+                                      String code = '''
+@A is P of 1,1;
+@c is C of .O, <.PI,0>;
+                                                  ''';
+                                      lll();
+                                      m('gmk源代码\n$code');
+                                      GMKCore gmkCore = GMKCore();
+                                      gmkCore.loadCode(code);
+                                      lll('结构');
+                                      m(
+                                        'printStructure:\n${gmkCore.printStructure()}',
+                                      );
+                                      lll('生成代码');
+                                      m(
+                                        'generatedCode:\n${gmkCore.generatedCode()}',
+                                      );
+                                      return msg;
+                                    }),
                                   ],
                                 ),
                               );

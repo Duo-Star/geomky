@@ -1,6 +1,10 @@
 library;
 
 import 'dart:math' as math;
+
+import 'GMKCommand.dart';
+import 'GMKStructure.dart';
+
 import '../../Linear/Vector.dart';
 import '../../Conic/Circle.dart';
 import '../../../../Algebra/Functions/Main.dart' as funcs;
@@ -100,6 +104,7 @@ List<dynamic> str2Factor(String str) {
   return factors;
 }
 
+
 // 解析值
 dynamic _parseValue(String value) {
   if (value == '.T') return true;
@@ -122,18 +127,19 @@ dynamic _parseValue(String value) {
   return value;
 }
 
-bool goCompiler(String source) {
+
+GMKStructure goCompiler(String source) {
   String source_ = removeComments(source);
+  GMKStructure structure = GMKStructure.newBlank();
   List<String> lines = source_.split('\n');
   for (var line in lines) {
-    //GMKProcess(this.method, this.label, this.factor);
     if (line.startsWith('@')) {
       //剔除首尾空格 - trim()
       try {
         String label = subStringBetween(line, '@', ' is ').trim();
         String method = subStringBetween(line, ' is ', ' of ').trim();
         List<dynamic> factor = str2Factor(subStringBetween(line, ' of ', ';'));
-        //  structure.addStep(GMKProcess(method, label, factor));
+        structure.addStep(GMKCommand(method, label, factor));
       } on RangeError catch (e) {
         Exception('字符串解析错误: 在行中找不到必要的分隔符');
         Exception('原始行: "$line"');
@@ -158,9 +164,10 @@ bool goCompiler(String source) {
     }
   }
 
-  return true;
+  return structure;
 }
 
+// 吸附到数字
 String adsorbConstNum(num n) {
   if (funcs.abs(n - math.pi) < 1e-10) {
     return '.PI';
@@ -177,6 +184,7 @@ String adsorbConstNum(num n) {
   }
 }
 
+// 吸附到常向量，以及分量数字
 String adsorbConstVec(Vector v) {
   if (v.x==1.0 && v.y==0.0){
     return '.I';
@@ -189,7 +197,7 @@ String adsorbConstVec(Vector v) {
   }
 }
 
-
+// 参数转字符，用于数据序列化
 String factor2Str(List<dynamic> factor) {
   String str = '';
   for (int i = 0; i < factor.length; i++) {

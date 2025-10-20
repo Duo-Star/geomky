@@ -4,6 +4,7 @@ class GMKCommand {
   String type = '?';
   List<dynamic> factor = [];
 
-  GMKCommand();
+
+  GMKCommand(this.method, this.label, this.factor);
 
 }
