@@ -1,5 +1,4 @@
 import '../../Geometry/D3/Linear/Vec3.dart';
-import 'Env.dart';
 
 class Particle {
   Vec3 p = Vec3();
@@ -7,7 +6,6 @@ class Particle {
   Vec3 a = Vec3();
   num m = 1;
   num q = 1;
-  Env env = Env();
 
   Particle(this.p, this.v, this.a);
 

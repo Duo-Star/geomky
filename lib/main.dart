@@ -1,16 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'MathForest/Geometry/D2/GMK/Monxiv/main.dart';
-import 'MathForest/Geometry/D2/Linear/Vector.dart';
-import 'MathForest/Geometry/D2/Linear/Dots.dart';
-import 'MathForest/Geometry/D2/Linear/Polygon.dart';
-import 'MathForest/Statistics/RandomMaster.dart';
-import 'MathForest/Physics/Parbase/Particle.dart';
-import 'MathForest/Geometry/D3/Linear/Vec3.dart';
-import 'MathForest/Physics/Parbase/links/Spring.dart';
-import 'MathForest/Physics/Parbase/links/Friction.dart';
-
+import 'MathForest/main.dart';
+import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as GMKCompiler;
 
 void main() {
   runApp(const MyApp());
@@ -95,7 +87,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'GeoMKY',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Color.fromARGB(255,230,228,186),
+        ),
       ),
       home: const MyHomePage(title: 'GeoMKY'),
     );
@@ -159,14 +153,14 @@ class _MyHomePageState extends State<MyHomePage>
     // 例如：添加一些测试粒子
     _physicsState.particles.addAll([
       Particle(Vec3(), Vec3(), Vec3()),
-      Particle(Vec3(0,1), Vec3(.1), Vec3()),
-      Particle(Vec3(0,2), Vec3(), Vec3())
+      Particle(Vec3(0, 1), Vec3(.1), Vec3()),
+      Particle(Vec3(0, 2), Vec3(), Vec3()),
     ]);
 
     // 添加测试形状
-    _physicsState.shapes.add(Polygon([Vector(-1, -1), Vector(1, -1), Vector(1, 1), Vector(-1, 1)]),);
-
-
+    _physicsState.shapes.add(
+      Polygon([Vector(-1, -1), Vector(1, -1), Vector(1, 1), Vector(-1, 1)]),
+    );
   }
 
   void _updatePhysics(Timer timer) {
@@ -187,11 +181,9 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _runPhysicsSimulation(PhysicsState state, double dt) {
-
-
     Spring sp = Spring(1e4, 1);
 
-    Vec3 gf = Vec3(0,-3);
+    Vec3 gf = Vec3(0, -3);
     Friction airFr = Friction(1, .08, 'Air');
 
     state.particles[0].p = Vec3();
@@ -206,14 +198,14 @@ class _MyHomePageState extends State<MyHomePage>
     state.particles[1].update(dt);
     state.particles[2].update(dt);
 
-    state.shapes[0] = Polygon([state.particles[0].p.vec2,
+    state.shapes[0] = Polygon([
+      state.particles[0].p.vec2,
       state.particles[1].p.vec2,
       state.particles[2].p.vec2,
       state.particles[1].p.vec2,
     ]);
 
     state.time += dt;
-
   }
 
   @override
@@ -253,46 +245,373 @@ class _MyHomePageState extends State<MyHomePage>
           ),
 
           Container(
-            height: 50,
+            height: 55,
             color: Colors.blueGrey[100],
             child: DefaultTabController(
               initialIndex: 3,
               length: 8,
               child: Scaffold(
                 appBar: AppBar(
-                  title: const Text('GeoMKY - welcome pakoo lib'),
+                  title: const Text('GeoMKY - 最小测试单元'),
                   actions: <Widget>[
-                    IconButton(
-                      icon: const Icon(Icons.add_alert),
-                      tooltip: 'Show Snackbar',
-                      onPressed: () {
-                        //hihi();
+
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        print('选择了: $value');
                       },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem<String>(
+                          value: 'home',
+                          child: Text('保存'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('导入'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('加载'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary, // 按钮背景色
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text.rich(
+                          TextSpan(
+                            text: '文件',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.file_copy_outlined),
-                      tooltip: 'Show Snackbar',
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('This is a snackbar')),
-                        );
+
+                    SizedBox(width: 20),
+
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        print('选择了: $value');
                       },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem<String>(
+                          value: 'home',
+                          child: Text('点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('直线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('圆周'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('亏-Conic0'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('齐-Conic1'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('超-Conic2'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('交叉'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('轨道'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('虚空'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('骈点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('合点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('骈叉'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('点集'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('三角'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('多边形'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('正矩形'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('文本'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('MD'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('按钮'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text.rich(
+                          TextSpan(
+                            text: '新',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
+
+                    SizedBox(width: 6),
+
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        print('选择了: $value');
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('交点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'home',
+                          child: Text('平行线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('垂线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('中垂线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('角分线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('中点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('切线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('极线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('极点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('对称'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('反演'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('投影'),
+                        ),
+
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text.rich(
+                          TextSpan(
+                            text: '构造',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 6),
+
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        print('选择了: $value');
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        const PopupMenuItem<String>(
+                          value: 'home',
+                          child: Text('圆心-中心'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'profile',
+                          child: Text('焦点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('准线'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('长轴端点'),
+                        ),
+                        const PopupMenuItem<String>(
+                          value: 'settings',
+                          child: Text('短轴端点'),
+                        ),
+
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text.rich(
+                          TextSpan(
+                            text: '属性',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 6),
+
                     IconButton(
-                      icon: const Icon(Icons.navigate_next),
-                      tooltip: 'Go to the next page',
+                      icon: const Icon(Icons.account_balance),
+                      tooltip: '调试',
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute<void>(
                             builder: (BuildContext context) {
                               return Scaffold(
-                                appBar: AppBar(title: const Text('Next page')),
-                                body: const Center(
-                                  child: Text(
-                                    'This is the next page',
-                                    style: TextStyle(fontSize: 24),
-                                  ),
+                                appBar: AppBar(title: const Text('Debug Library')),
+                                body: ListView(
+                                  children: [
+                                    Card(
+                                      margin: EdgeInsets.all(10), // 建议添加外边距，使卡片间有间隔[1](@ref)
+                                      elevation: 3.0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6.0),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          children: [
+                                            ListTile(
+                                              leading: const Icon(Icons.ac_unit_rounded),
+                                              title: const Text('你会点下它吗'),
+                                              subtitle: const Text('awa'),
+                                              trailing: IconButton(
+                                                onPressed: () {
+                                                  String msg = '控制台';
+                                                  void m(String str) {
+                                                    msg = '$msg\n$str';
+                                                  }
+                                                  m('欢迎找我玩');
+                                                  m('Duo-113530014');
+                                                  m('QQ-Group-663251235');
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(SnackBar(content: Text(msg)));
+                                                },
+                                                icon: const Icon(Icons.accessibility_new_rounded),
+                                                tooltip: '调试',
+                                              ),
+                                            ),
+                                            // ... 其他内容
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    Card(
+                                      margin: EdgeInsets.all(10), // 建议添加外边距，使卡片间有间隔[1](@ref)
+                                      elevation: 3.0,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6.0),
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          children: [
+                                            ListTile(
+                                              leading: const Icon(Icons.ac_unit_rounded),
+                                              title: const Text('参数列解析器'),
+                                              subtitle: const Text('GMKCompiler.str2Factor'),
+                                              trailing: IconButton(
+                                                onPressed: () {
+                                                  String msg = '控制台';
+                                                  void m(String str) {
+                                                    msg = '$msg\n$str';
+                                                  }
+
+                                                  String str =
+                                                      '1, 1.23, .PI, .NAN, .INF,  a, <b>, .T, <3,4>, <1.23, 4.56>, <.PI, .PI>, <.NAN, .INF>, .I;';
+                                                  m('-----------原始-----------');
+                                                  m(str);
+
+                                                  m('-----------参数列-----------');
+                                                  List<dynamic> fac = GMKCompiler.str2Factor(str);
+                                                  for (var item in fac) {
+                                                    m('$item, type:${item.runtimeType}');
+                                                  }
+
+                                                  m('-----------还原-----------');
+                                                  m(GMKCompiler.factor2Str(fac));
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(SnackBar(content: Text(msg)));
+
+                                                },
+                                                icon: const Icon(Icons.accessibility_new_rounded),
+                                                tooltip: '调试',
+                                              ),
+                                            ),
+                                            // ... 其他内容
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+
+
+                                  ],
                                 ),
                               );
                             },
@@ -301,6 +620,20 @@ class _MyHomePageState extends State<MyHomePage>
                       },
                     ),
                   ],
+                  /*
+                  bottom: TabBar(
+                    tabs: const <Widget>[
+                      Tab(text: '文件'),
+                      Tab(text: '工具'),
+                      Tab(text: '属性'),
+                      Tab(text: '线性'),
+                      Tab(text: '经典'),
+                      Tab(text: '退化'),
+                      Tab(text: '共生'),
+                      Tab(text: '元素'),
+                    ],
+                  ),
+                   */
                 ),
               ),
             ),

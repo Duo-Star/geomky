@@ -148,7 +148,7 @@ class Vector {
 
   // 字符化
   @override
-  String toString() => 'Vec2($x, $y)';
+  String toString() => 'Vector($x, $y)';
 
   //类型
   String get type => "Vec2";

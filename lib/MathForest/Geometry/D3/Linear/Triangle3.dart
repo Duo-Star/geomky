@@ -2,12 +2,12 @@
 import 'dart:math';
 import 'Vec3.dart';
 
-class Triangle{
+class Triangle3 {
   Vec3 a;
   Vec3 b;
   Vec3 c;
 
-  Triangle([Vec3? a, Vec3? b, Vec3? c]): //三个点
+  Triangle3([Vec3? a, Vec3? b, Vec3? c]): //三个点
         a = a ?? Vec3.i,
         b = b ?? Vec3.j,
         c = c ?? Vec3.k;

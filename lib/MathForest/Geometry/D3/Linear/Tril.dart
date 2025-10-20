@@ -1,7 +1,7 @@
 // Tril 空间汆角
 
 import 'Vec3.dart';
-import 'Triangle.dart';
+import 'Triangle3.dart';
 
 /*
 空间中的基本元素，四面体的构件
@@ -56,8 +56,8 @@ class Tril {
   }
 
   //
-  Triangle get triangle {
-    return Triangle(p+a, p+b, p+c);
+  Triangle3 get triangle {
+    return Triangle3(p+a, p+b, p+c);
   }
 
 }
