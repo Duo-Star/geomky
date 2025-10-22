@@ -46,13 +46,15 @@ Vector(3, 4),                  type:Vector
 Vector(3.141592653589793, 3.141592653589793), type:Vector
 Vector(1, 0.0),                type:Vector
                          */
+/*
+String.trim 移除字符串首尾的所有空白字符
+返回一个新的字符串，原始字符串不会被修改。仅移除首尾空白字符，字符串中间的任何空白字符都会保留
+空白字符定义: 包括空格、制表符(\t)、换行符(\n)等
+ */
+
 List<dynamic> str2Factor(String str) {
   List<dynamic> factors = [];
-  // 移除末尾的分号和空格
-  str = str.trim(); // 移除空格
-  if (str.endsWith(';')) {
-    str = str.substring(0, str.length - 1).trim();
-  }
+  str = str.trim();
   // 按逗号分割，但要处理 < > 内的逗号
   List<String> parts = [];
   StringBuffer currentPart = StringBuffer();
@@ -66,7 +68,7 @@ List<dynamic> str2Factor(String str) {
     } else if (char == '>') {
       inAngleBrackets = false;
       currentPart.write(char);
-    } else if (char == ',' && !inAngleBrackets) {
+    } else if (char == ' ' && !inAngleBrackets) {
       // 不在尖括号内的逗号作为分隔符
       String part = currentPart.toString().trim();
       if (part.isNotEmpty) {
@@ -87,12 +89,13 @@ List<dynamic> str2Factor(String str) {
     part = part.trim();
     if (part.isEmpty) continue;
     if (part.startsWith('<') && part.endsWith('>')) {
-      // 字符串类型，去掉尖括号
       String content = part.substring(1, part.length - 1);
-      if (content.contains(',')) {
+      if (content.contains(' ')) {
+        //向量
         var f = str2Factor(content.trim());
         factors.add(Vector(f[0], f[1]));
       } else {
+        //标签
         factors.add('#label<${content.trim()}>');
       }
     } else {
@@ -103,7 +106,6 @@ List<dynamic> str2Factor(String str) {
   }
   return factors;
 }
-
 
 // 解析值
 dynamic _parseValue(String value) {
@@ -128,6 +130,16 @@ dynamic _parseValue(String value) {
 }
 
 
+String extractAfter(String input, String? sign) {
+  String sign_ = sign??' of ';
+  final index = input.indexOf(sign_);
+  if (index == -1) return '';
+  final startIndex = index + sign_.length;
+  if (startIndex >= input.length) return '';
+  return input.substring(startIndex);
+}
+
+
 GMKStructure goCompiler(String source) {
   String source_ = removeComments(source);
   GMKStructure structure = GMKStructure.newBlank();
@@ -138,7 +150,7 @@ GMKStructure goCompiler(String source) {
       try {
         String label = subStringBetween(line, '@', ' is ').trim();
         String method = subStringBetween(line, ' is ', ' of ').trim();
-        List<dynamic> factor = str2Factor(subStringBetween(line, ' of ', ';'));
+        List<dynamic> factor = str2Factor(extractAfter(line, ' of '));
         structure.addStep(GMKCommand(method, label, factor));
       } on RangeError catch (e) {
         Exception('字符串解析错误: 在行中找不到必要的分隔符');
@@ -186,14 +198,14 @@ String adsorbConstNum(num n) {
 
 // 吸附到常向量，以及分量数字
 String adsorbConstVec(Vector v) {
-  if (v.x==1.0 && v.y==0.0){
+  if (v.x == 1.0 && v.y == 0.0) {
     return '.I';
-  } else if (v.x==0.0 && v.y==1.0){
+  } else if (v.x == 0.0 && v.y == 1.0) {
     return '.J';
-  } else if (v.x==0.0 && v.y==0.0){
+  } else if (v.x == 0.0 && v.y == 0.0) {
     return '.O';
   } else {
-    return '<${adsorbConstNum(v.x)}, ${adsorbConstNum(v.y)}>';
+    return '<${adsorbConstNum(v.x)} ${adsorbConstNum(v.y)}>';
   }
 }
 
@@ -202,27 +214,27 @@ String factor2Str(List<dynamic> factor) {
   String str = '';
   for (int i = 0; i < factor.length; i++) {
     dynamic item = factor[i];
-    String division = (i + 1 == factor.length) ? ";" : ',';
+    String division = (i + 1 == factor.length) ? "" : ' ';
     switch (item.runtimeType) {
       case const (String):
         if (item.startsWith('#label')) {
-          str = '$str<${subStringBetween(item, '<', '>')}>$division ';
+          str = '$str<${subStringBetween(item, '<', '>')}>$division';
         } else {
-          str = '$str$item$division ';
+          str = '$str$item$division';
         }
       case const (Vector):
-        str = '$str${adsorbConstVec(item)}$division ';
+        str = '$str${adsorbConstVec(item)}$division';
       case const (double):
         String s = adsorbConstNum(item);
-        str = '$str$s$division ';
+        str = '$str$s$division';
       case const (int):
         String s = adsorbConstNum(item);
-        str = '$str$s$division ';
+        str = '$str$s$division';
       case const (bool):
-        str = '$str${item?'.T':'.F'}$division ';
+        str = '$str${item ? '.T' : '.F'}$division';
       default:
         String s = item.toString();
-        str = '$str$s$division ';
+        str = '$str$s$division';
     }
   }
   return str;

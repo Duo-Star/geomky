@@ -116,9 +116,15 @@ class _MyHomePageState extends State<MyHomePage>
 
     // 加载源码
     gmkCore.loadCode('''
-@A is P of 1, 1;
-@x is N of .E;
-@B is P of <x>, .PI;
+``@A is P of 1 1
+@x is N of .E
+@B is P of <x> .PI
+@C is P:v of <2 2>
+@D is P^mid of <C> <A>``
+
+@qn1 is QN of 0 1 1.2 2
+@c is C:pr of .O 1
+
 
 
 ''');
@@ -630,7 +636,7 @@ class _MyHomePageState extends State<MyHomePage>
                                                     }
 
                                                     String str =
-                                                        '1, 1.23, .PI, .NAN, .INF,  a, <b>, .T, <3,4>, <1.23, 4.56>, <.PI, .PI>, <.NAN, .INF>, .I;';
+                                                        '1 1.23 .PI .NAN .INF a <b> .T <3 4> <1.23 4.56> <.PI .PI> <.NAN .INF> .I';
                                                     m(
                                                       '-----------原始-----------',
                                                     );
@@ -690,9 +696,9 @@ class _MyHomePageState extends State<MyHomePage>
                                         }
 
                                         String code = '''
-@A is P of 1, 1;
-@c is C of .O, <.PI,0>;
-@l is L of <A>, .I;
+@A is P of 1 1
+@c is C of .O <.PI 0>
+@l is L of <A> .I
                                                   ''';
                                         lll();
                                         m('gmk源代码\n$code');

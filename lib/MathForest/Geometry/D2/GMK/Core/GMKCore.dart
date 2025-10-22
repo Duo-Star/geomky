@@ -49,10 +49,8 @@ class GMKCore {
     for (var i = 1; i <= structureStepCount; i++) {
       GMKCommand itemGMKCommand = gmkStructure.indexStep(i);
       String label = itemGMKCommand.label;
-      String type = lib.getTypeByMethod(itemGMKCommand.method);
-      gmkData.data[label] = GraphOBJ(
-        lib.run(itemGMKCommand, gmkData), label, type
-      );
+      var (obj, type) = lib.analysis(itemGMKCommand, gmkData);
+      gmkData.data[label] = GraphOBJ(obj, label, type);
     }
     return gmkData;
   }

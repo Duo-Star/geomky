@@ -331,6 +331,10 @@ class Monxiv {
             Vector p = Vector(gmkData.data[key]?.obj);
             drawPoint(p, canvas, paint: defaultPaint);
             drawText('N: $key', p, 12, 500, canvas);
+          case const ("Circle"):
+            Circle circle = gmkData.data[key]?.obj;
+            drawCircle(circle, canvas);
+            drawText('Circle: $key', circle.p, 12, 500, canvas);
           default:
             drawText('error: $key', Vector(0, 0), 12, 500, canvas);
         }
