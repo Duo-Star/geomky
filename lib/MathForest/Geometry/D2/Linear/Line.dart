@@ -2,6 +2,10 @@
 
 import 'dart:math' as math ;
 import 'Vector.dart';
+import '../../../Algebra/Trunk/Fertile/DNum.dart';
+import '../../../Algebra/Trunk/Fertile/QNum.dart';
+import '../Fertile/DPoint.dart';
+import '../Fertile/QPoint.dart';
 /*
 为保证广泛性，我们使用 p + lam * v 代替 k * x + b
 ，另外 我不喜欢 Ax + By +C =0
@@ -22,6 +26,13 @@ class Line {
 
   // 索引点
   Vector indexPoint(num lam) => p + v * lam;
+  DPoint indexDPoint(DNum theta) => DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
+  QPoint indexQPoint(QNum theta) => QPoint(
+    indexPoint(theta.n1),
+    indexPoint(theta.n2),
+    indexPoint(theta.n3),
+    indexPoint(theta.n4),
+  );
 
   // 判定平行，注意我们不规避重合！
   bool isParallel (Line other) {

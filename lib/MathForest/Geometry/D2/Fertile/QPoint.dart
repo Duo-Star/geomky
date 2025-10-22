@@ -4,14 +4,12 @@
 
  */
 
-
 import '../Linear/Line.dart';
 import '../Linear/Vector.dart';
 import 'DPoint.dart';
-import '../Intersection/IntersectionSolver.dart' as InsSolver;
+import '../Intersection/Line520.dart' as l520;
 import 'DXLine.dart';
 import '../Conic/XLine.dart';
-
 
 
 class QPoint {
@@ -33,7 +31,7 @@ class QPoint {
   Line get l2 => dP2.l;
 
   //中心 - 对定点连线交点
-  //Vector get heart => InsSolver.Line_Line(l1, l2);
+  Vector get heart => l520.xLineLine(l1, l2);
 
   //四条直线
   Line get l12 => Line.new2P(p1, p2);
@@ -42,23 +40,20 @@ class QPoint {
   Line get l34 => Line.new2P(p3, p4);
 
   //衍骈点
-  //DPoint get deriveDP => DPoint(InsSolver.Line_Line(l14, l32), InsSolver.Line_Line(l12, l34));
+  DPoint get deriveDP => DPoint(l520.xLineLine(l14, l32), l520.xLineLine(l12, l34));
 
   //衍线
-  //Line get deriveL => deriveDP.l;
+  Line get deriveL => deriveDP.l;
 
   //DXLine 骈叉线
-  /*
   DXLine get net {
-    Vector deriveDP1 = InsSolver.Line_Line(l14, l32);
-    Vector deriveDP2 = InsSolver.Line_Line(l12, l34);
+    Vector deriveDP1 = l520.xLineLine(l14, l32);
+    Vector deriveDP2 = l520.xLineLine(l12, l34);
     return DXLine(
         XLine(deriveDP1, p1 - deriveDP1, p2 - deriveDP1),
         XLine(deriveDP2, p1 - deriveDP1, p4 - deriveDP1)
     );
   }
-
-   */
 
 
 

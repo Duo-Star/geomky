@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 
@@ -104,7 +105,6 @@ class _MyHomePageState extends State<MyHomePage>
 
   // 物理状态
   GMKState _gmkState = GMKState();
-
   GMKCore gmkCore = GMKCore();
 
   // 物理模拟参数
@@ -114,20 +114,50 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
 
+    // print(_gmkState.time);
     // 加载源码
-    gmkCore.loadCode('''
+    gmkCore.loadCode("""
 ``@A is P of 1 1
 @x is N of .E
 @B is P of <x> .PI
 @C is P:v of <2 2>
-@D is P^mid of <C> <A>``
+@D is P^mid of <C> <A>
+``
 
-@qn1 is QN of 0 1 1.2 2
-@c is C:pr of .O 1
+``
+@n1 is N^mul of <time> .E
+@qn1 is QN of 1 2 <n1> <time>
+@c1 is C:pr of <1 1> 1
+@qp1 is IndexQP of <c1> <qn1>
+@p1 is QP^heart of <qp1>
+@l1 is QP^deriveL of <qp1>
+``
+
+@n1 is N of 1
+@n2 is N of 2
+@n3 is N of 3
+@n4 is N of 5
+@c1 is C:pr of .O 1
+
+@p1 is IndexP of <c1> <n1>
+@p2 is IndexP of <c1> <n2>
+@p3 is IndexP of <c1> <n3>
+@p4 is IndexP of <c1> <n4>
+
+@l12 is L of <p1> <p2>
+@l34 is L of <p3> <p4>
+
+@l23 is L of <p2> <p3>
+@l14 is L of <p1> <p4>
+
+@p5 is Ins^ll of <l12> <l34>
+@p6 is Ins^ll of <l23> <l14>
+
+@准线 is L of <p5> <p6>
 
 
 
-''');
+""");
 
     // 持续重绘的动画控制器
     _animationController = AnimationController(
@@ -163,7 +193,8 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _runGMK(GMKState state, double dt) {
-    state.gmkData = gmkCore.run();
+
+    state.gmkData = gmkCore.run(state.time);
     state.time += dt;
   }
 

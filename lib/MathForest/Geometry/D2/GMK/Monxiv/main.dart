@@ -48,6 +48,18 @@ class Monxiv {
     ..color = Colors.amber
     ..style = PaintingStyle.stroke
     ..strokeWidth = 2.5;
+  Paint defaultQPointPaint = Paint()
+    ..color = Colors.blueAccent
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3.0;
+  Paint defaultPointPaint = Paint()
+    ..color = Colors.redAccent
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3.0;
+  Paint defaultLinePaint = Paint()
+    ..color = Colors.green
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 3.0;
   Paint axisPaint = Paint()
     ..color = Color.fromARGB(180, 0, 0, 0)
     ..style = PaintingStyle.stroke
@@ -156,7 +168,7 @@ class Monxiv {
   }
 
   bool drawPoint(Vector p, Canvas canvas, {Paint? paint}) {
-    final Paint usedPaint = paint ?? defaultPaint;
+    final Paint usedPaint = paint ?? defaultPointPaint;
     canvas.drawCircle(c2s(p).offset, 3, usedPaint);
     if (infoMode) {
       drawText(p.toString(), p, 12, 500.0, canvas);
@@ -171,10 +183,10 @@ class Monxiv {
   }
 
   bool drawQPoint(QPoint qP, Canvas canvas, {Paint? paint}) {
-    drawPoint(qP.p1, canvas);
-    drawPoint(qP.p2, canvas);
-    drawPoint(qP.p3, canvas);
-    drawPoint(qP.p4, canvas);
+    drawPoint(qP.p1, canvas, paint: defaultQPointPaint);
+    drawPoint(qP.p2, canvas, paint: defaultQPointPaint);
+    drawPoint(qP.p3, canvas, paint: defaultQPointPaint);
+    drawPoint(qP.p4, canvas, paint: defaultQPointPaint);
     return true;
   }
 
@@ -232,7 +244,7 @@ class Monxiv {
   }
 
   bool drawLine(Line l, Canvas canvas, {Paint? paint}) {
-    final Paint usedPaint = paint ?? defaultPaint;
+    final Paint usedPaint = paint ?? defaultLinePaint;
     num long = 114514 / lam;
     Offset p1 = c2s(l.indexPoint(-long)).offset;
     Offset p2 = c2s(l.indexPoint(long)).offset;
@@ -325,18 +337,30 @@ class Monxiv {
         switch (gmkData.data[key]?.type) {
           case const ("Vector"):
             Vector p = gmkData.data[key]?.obj;
-            drawPoint(p, canvas, paint: defaultPaint);
+            drawPoint(p, canvas);
             drawText('Point: $key', p, 12, 500, canvas);
+          case const ("DPoint"):
+            DPoint dp = gmkData.data[key]?.obj;
+            drawDPoint(dp, canvas);
+          case const ("QPoint"):
+            QPoint qp = gmkData.data[key]?.obj;
+            drawQPoint(qp, canvas);
+            //drawText('Point: $key', qp.p1, 12, 500, canvas);
           case const ("num"):
             Vector p = Vector(gmkData.data[key]?.obj);
-            drawPoint(p, canvas, paint: defaultPaint);
+            drawPoint(p, canvas);
             drawText('N: $key', p, 12, 500, canvas);
           case const ("Circle"):
             Circle circle = gmkData.data[key]?.obj;
             drawCircle(circle, canvas);
             drawText('Circle: $key', circle.p, 12, 500, canvas);
+          case const ("Line"):
+            Line l = gmkData.data[key]?.obj;
+            drawLine(l, canvas);
+            drawText('Circle: $key', l.p, 12, 500, canvas);
+
           default:
-            drawText('error: $key', Vector(0, 0), 12, 500, canvas);
+            // drawText('error: $key', Vector(0, 0), 12, 500, canvas);
         }
       }
     }

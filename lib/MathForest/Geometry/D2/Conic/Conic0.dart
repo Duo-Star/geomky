@@ -2,7 +2,9 @@ import 'dart:math';
 
 
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
+import '../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../Fertile/DPoint.dart';
+import '../Fertile/QPoint.dart';
 //import 'HLine.dart';
 //import 'XLine.dart';
 //import 'Conic.dart';
@@ -48,6 +50,12 @@ class Conic0 {
 
   Vector indexPoint(num theta) => p + u * cos(theta) + v * sin(theta);
   DPoint indexDPoint(DNum theta) => DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
+  QPoint indexQPoint(QNum theta) => QPoint(
+    indexPoint(theta.n1),
+    indexPoint(theta.n2),
+    indexPoint(theta.n3),
+    indexPoint(theta.n4),
+  );
 
   List<num> get ab { //计算长短轴(半)
     num a1 = u.pow2;

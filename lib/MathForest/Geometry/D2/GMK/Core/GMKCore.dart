@@ -13,7 +13,14 @@ import '../Monxiv/GraphOBJ.dart';
 
 class GMKCore {
   GMKStructure gmkStructure = GMKStructure.newBlank();
-  GMKData gmkData = GMKData({});
+  GMKData gmkData = GMKData({
+    'time': GraphOBJ(0.5, 'time', 'num <TIME>')
+  });
+  num t = 0 ;
+
+  bool init() {
+    return true;
+  }
 
   GMKStructure loadCode(String code) {
     gmkStructure = compiler.goCompiler(code);
@@ -44,7 +51,7 @@ class GMKCore {
     return s;
   }
 
-  GMKData run() {
+  GMKData run(num t) {
     int structureStepCount = gmkStructure.stepCount;
     for (var i = 1; i <= structureStepCount; i++) {
       GMKCommand itemGMKCommand = gmkStructure.indexStep(i);
@@ -52,6 +59,7 @@ class GMKCore {
       var (obj, type) = lib.analysis(itemGMKCommand, gmkData);
       gmkData.data[label] = GraphOBJ(obj, label, type);
     }
+    gmkData.data['time'] = GraphOBJ(t, 'time', 'num <TIME>');
     return gmkData;
   }
 }

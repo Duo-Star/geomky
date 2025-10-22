@@ -3,7 +3,9 @@ import '../Linear/Vector.dart';
 import '../Linear/Line.dart';
 
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
+import '../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../Fertile/DPoint.dart';
+import '../Fertile/QPoint.dart';
 import 'HLine.dart';
 import 'XLine.dart';
 //import 'Conic.dart';
@@ -26,7 +28,13 @@ class Conic2 {
   }
 
   Vector indexPoint(num t) => p + u * t + v * (1/t);
-  DPoint indexDPoint(DNum t) => DPoint(indexPoint(t.n1),indexPoint(t.n2));
+  DPoint indexDPoint(DNum theta) => DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
+  QPoint indexQPoint(QNum theta) => QPoint(
+    indexPoint(theta.n1),
+    indexPoint(theta.n2),
+    indexPoint(theta.n3),
+    indexPoint(theta.n4),
+  );
 
   Vector get vA => (u.unit + v.unit).unit; //实轴方向
   Vector get vB => (u.unit - v.unit).unit; //虚轴方向
