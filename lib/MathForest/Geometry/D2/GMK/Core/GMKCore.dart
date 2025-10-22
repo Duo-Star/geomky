@@ -1,24 +1,19 @@
 // 几何数据
 import 'GMKData.dart';
-
 // 几何结构
 import 'GMKStructure.dart';
-
 // 单步命令
 import 'GMKCommand.dart';
-
 // 编译器
 import 'GMKCompiler.dart' as compiler;
-
 // 方法集合
 import 'GMKLib.dart' as lib;
-
 // 几何对象
 import '../Monxiv/GraphOBJ.dart';
 
 class GMKCore {
   GMKStructure gmkStructure = GMKStructure.newBlank();
-  GMKData gmkData = GMKData();
+  GMKData gmkData = GMKData({});
 
   GMKStructure loadCode(String code) {
     gmkStructure = compiler.goCompiler(code);
@@ -49,5 +44,16 @@ class GMKCore {
     return s;
   }
 
-
+  GMKData run() {
+    int structureStepCount = gmkStructure.stepCount;
+    for (var i = 1; i <= structureStepCount; i++) {
+      GMKCommand itemGMKCommand = gmkStructure.indexStep(i);
+      String label = itemGMKCommand.label;
+      String type = lib.getTypeByMethod(itemGMKCommand.method);
+      gmkData.data[label] = GraphOBJ(
+        lib.run(itemGMKCommand, gmkData), label, type
+      );
+    }
+    return gmkData;
+  }
 }

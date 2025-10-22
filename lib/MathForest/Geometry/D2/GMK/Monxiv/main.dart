@@ -1,8 +1,9 @@
 import 'dart:math';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import '../Core/GMKData.dart';
 
 import '../../Fertile/DPoint.dart';
 import '../../Fertile/QPoint.dart';
@@ -31,7 +32,7 @@ class Monxiv {
   Vector _startMonxivP = Vector();
   double _startMonxivLam = 1.0;
   bool _isDragging = false;
-  List<num> monxivLamRestriction = [.5, 5e3];
+  List<num> monxivLamRestriction = [5, 1e3];
 
   //
   num get xStart => -p.x / lam;
@@ -57,6 +58,7 @@ class Monxiv {
     ..strokeWidth = 2.0;
 
   Color bgc = Color.fromARGB(200, 230, 230, 230);
+  Color axisLabelColor = Colors.black54;
 
   Vector c2s(Vector c) {
     return Vector(c.x * lam + p.x, -c.y * lam + p.y);
@@ -67,7 +69,7 @@ class Monxiv {
   }
 
   void reset([Vector? v]) {
-    p =v?? Vector(150, 150);
+    p = v ?? Vector(150, 150);
     lam = 100;
   }
 
@@ -136,18 +138,19 @@ class Monxiv {
     Canvas canvas, {
     Color? color,
   }) {
-    final ParagraphBuilder builder = ParagraphBuilder(
-      ParagraphStyle(
+    ui.ParagraphBuilder builder = ui.ParagraphBuilder(
+      ui.ParagraphStyle(
         fontSize: fontSize,
         fontWeight: FontWeight.bold,
         fontStyle: FontStyle.normal,
       ),
     );
-
+    builder.pushStyle(ui.TextStyle(
+      color: color?? Color.fromARGB(200,0,0,0)
+    ));
     builder.addText(str);
-
-    final Paragraph paragraph = builder.build();
-    paragraph.layout(ParagraphConstraints(width: width));
+    final ui.Paragraph paragraph = builder.build();
+    paragraph.layout(ui.ParagraphConstraints(width: width));
     canvas.drawParagraph(paragraph, (c2s(p)).offset);
     return true;
   }
@@ -176,7 +179,7 @@ class Monxiv {
   }
 
   bool drawDots(Dots ds, Canvas canvas, {Paint? paint}) {
-    List<Vector> dots=ds.dots;
+    List<Vector> dots = ds.dots;
     final Paint usedPaint = paint ?? defaultPaint;
     for (int i = 0; i < dots.length; i++) {
       Vector item = dots[i];
@@ -189,10 +192,12 @@ class Monxiv {
     final vertices = poly.vertices;
     if (vertices.isEmpty) return false; // 空多边形不绘制
 
-    final usedPaint = paint ?? Paint() // 提供默认Paint
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..color = Colors.black;
+    final usedPaint =
+        paint ??
+              Paint() // 提供默认Paint
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0
+          ..color = Colors.black;
 
     final path = Path();
 
@@ -212,8 +217,6 @@ class Monxiv {
     canvas.drawPath(path, usedPaint);
     return true;
   }
-
-
 
   bool drawCircle(Circle circle, Canvas canvas, {Paint? paint}) {
     final Paint usedPaint = paint ?? defaultPaint;
@@ -315,45 +318,24 @@ class Monxiv {
 
    */
 
-  bool drawGMKData(gmkData, canvas) {
+  bool drawGMKData(GMKData gmkData, canvas) {
     //drawText('drawGMKData - error', c2s(Vector(10,10)), 12, 500, canvas);
-    for (var key in gmkData.data.keys) {
-      switch (gmkData.data[key]?.obj.runtimeType) {
-        case const (DPoint): //骈点
-          drawDPoint(gmkData.data[key].obj, canvas);
-        case const (QPoint): //骈点
-          drawQPoint(gmkData.data[key].obj, canvas);
-        case const (Vector):
-          //var _ = MColor.initializePaints();
-          drawPoint(gmkData.data[key].obj, canvas, paint: defaultPaint);
-        case const (Circle):
-          drawCircle(gmkData.data[key].obj, canvas);
-        case const (Line):
-          drawLine(gmkData.data[key].obj, canvas);
-        case const (Conic0):
-          drawConic0(gmkData.data[key].obj, canvas);
-        case const (num):
-          drawText(
-            gmkData.data[key].obj.toString(),
-            Vector(gmkData.data[key].obj, 0),
-            12,
-            500,
-            canvas,
-          );
-        case const (String):
-          drawText(
-            gmkData.data[key].obj.toString(),
-            Vector(0, 0),
-            12,
-            500,
-            canvas,
-          );
-
-        default:
-          drawText('error: $key', Vector(0, 0), 12, 500, canvas);
+    if (gmkData.count != 0) {
+      for (var key in gmkData.data.keys) {
+        switch (gmkData.data[key]?.type) {
+          case const ("Vector"):
+            Vector p = gmkData.data[key]?.obj;
+            drawPoint(p, canvas, paint: defaultPaint);
+            drawText('Point: $key', p, 12, 500, canvas);
+          case const ("num"):
+            Vector p = Vector(gmkData.data[key]?.obj);
+            drawPoint(p, canvas, paint: defaultPaint);
+            drawText('N: $key', p, 12, 500, canvas);
+          default:
+            drawText('error: $key', Vector(0, 0), 12, 500, canvas);
+        }
       }
     }
-
     return true;
   }
 
@@ -384,7 +366,7 @@ class Monxiv {
 
     for (int x = xStart.floor(); x <= xEnd; x++) {
       drawPoint(Vector(x), canvas, paint: axisPaint);
-      drawText("$x", Vector(x) + Vector(-0.1, -0.1), 12, 500, canvas);
+      drawText("$x", Vector(x) + Vector(-0.1, -0.1), 12, 500, canvas, color: axisLabelColor);
       drawSegmentBy2P(
         Vector(x, yEnd),
         Vector(x, yStart),
@@ -395,7 +377,7 @@ class Monxiv {
 
     for (int y = yStart.floor(); y <= yEnd; y++) {
       drawPoint(Vector(0, y), canvas, paint: axisPaint);
-      drawText("$y", Vector(0, y) + Vector(-0.1, -0.1), 12, 500, canvas);
+      drawText("$y", Vector(0, y) + Vector(-0.1, -0.1), 12, 500, canvas, color: axisLabelColor);
       drawSegmentBy2P(
         Vector(xStart, y),
         Vector(xEnd, y),
