@@ -8,7 +8,7 @@ import '../Monxiv/GOBJStyle.dart' as gStyle;
 
 import 'GMKCommand.dart';
 import 'GMKStructure.dart';
-import 'GMKError.dart';
+import 'GMKLib.dart' as g_lib;
 
 import '../../Linear/Vector.dart';
 import '../../Conic/Circle.dart';
@@ -157,14 +157,21 @@ GMKStructure goCompiler(String source) {
         String label = subStringBetween(line, '@', ' is ').trim();
         String method = subStringBetween(line, ' is ', ' of ').trim();
         List<dynamic> factor = str2Factor(extractAfter(line, ' of '));
-        structure.addStep(GMKCommand(method, label, factor));
+        //
+        GMKCommand cmd = GMKCommand(method, label, factor);
+        cmd.type = g_lib.method2type[method] ?? '?unType';
+        gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
+        cmd.style = style;
+        structure.addStep(cmd);
       }  catch (e, stackTrace) {
         Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
       }
     } else if (line.startsWith('#')) {
-      gStyle.GOBJStyle style = styleCompiler(line);
       String label = subStringBetween(line, '#', ' ').trim();
+      gStyle.GOBJStyle? oldStyle = structure.step[label]?.style;
+      gStyle.GOBJStyle style = styleCompiler(oldStyle!, line);
+
       structure.step[label]?.style = style;
       if (kDebugMode) {
         print('set style<$label>:${style.toString()}');
@@ -241,20 +248,26 @@ String gmkCommand2Str(GMKCommand gc) {
 }
 
 
-gStyle.GOBJStyle styleCompiler(String sCode) {
-  gStyle.GOBJStyle result = gStyle.GOBJStyle.none();
+gStyle.GOBJStyle styleCompiler(gStyle.GOBJStyle oldStyle, String sCode) {
+  gStyle.GOBJStyle result = oldStyle;
   String label = subStringBetween(sCode, '#', ' ').trim();
   String sFactor = extractAfter(sCode, '#$label');
   List<dynamic> factor = str2Factor(sFactor);
   for (int i = 0; i < factor.length; i++) {
     dynamic itemFactor = factor[i];
-    print(itemFactor.runtimeType);
+    //print(itemFactor.runtimeType);
     if (gStyle.color.contains(itemFactor)) {
       result.color = gStyle.colors[itemFactor]!;
     } else if (gStyle.shape.contains(itemFactor)) {
       result.shape = itemFactor;
     } else if (itemFactor.runtimeType == double || itemFactor.runtimeType == int) {
       result.size = itemFactor;
+    }  else if (gStyle.show.contains(itemFactor)) {
+      result.show = (itemFactor == 'show');
+    } else if (gStyle.labelShow.contains(itemFactor)) {
+      result.labelShow = (itemFactor == 'labelShow');
+    } else if (gStyle.fertileWaveLink.contains(itemFactor)) {
+      result.fertileWaveLink = (itemFactor == 'fertileWaveLink');
     }
   }
   return result;

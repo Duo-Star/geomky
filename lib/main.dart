@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
+import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as gLib;
 
 void main() {
   runApp(const MyApp());
@@ -35,7 +36,13 @@ class MyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     monxiv.setSize(size);
-    monxiv.drawFramework(canvas);
+    monxiv.setCanvas(canvas);
+    monxiv.drawFramework();
+    GMKData gmkData = gmkState.gmkData;
+    monxiv.setGMKData(gmkData);
+    monxiv.draw();
+
+
     /*
     Dots ds = Dots.randomFill(
       1000,
@@ -47,12 +54,7 @@ class MyPainter extends CustomPainter {
     monxiv.drawPolygon(polygon, canvas);
  */
 
-    monxiv.drawPoint(Vector(), canvas);
 
-    GMKData gmkData = gmkState.gmkData;
-
-    monxiv.setGMKData(gmkData);
-    monxiv.draw(canvas);
 
     //print(gmkData.data['A']);
   }
@@ -173,19 +175,46 @@ c2 = gmk.getVar('c2')
 c2.setColor(0xffffff00)
 *|``
 
-
 @c1 is C of .O 1
 @c2 is C of .I 1
 @xL is L of .O .I
 @yL is L of .O .J
-@dp1 is Ins^CC of <c1> <c2>
- @l1 is DP^l of <dp1>
- @p1 is Ins^ll of <l1> <xL>
- @c3 is C:op of <p1> .J
- @p2 is Ins^cl_lamMin of <c3> <xL>
+@dp1 is Ins^cc of <c1> <c2>
+@l1 is DP^l of <dp1>
+@p1 is Ins^ll of <l1> <xL>
+@c3 is C:op of <p1> .J
+@p2 is Ins^cl_index of <c3> <xL> 2
+@c4 is C:op of .J <p2>
+@dp2 is Ins^cc of <c4> <c1>
+@p3 is DP^index of <dp2> 1
+@p4 is DP^index of <dp2> 2
+@c5 is C:op of <p3> .J
+@c6 is C:op of <p4> .J
+@p5 is Ins^cc_index of <c5> <c1> 1
+@p6 is Ins^cc_index of <c6> <c1> 2
+@poly1 is Poly of .J <p3> <p5> <p6> <p4>
 
+@p7 is P of 3 4
+@p8 is P of 4 4
+@p9 is P of 2 5
+@c0_1 is C0 of <p7> <p8> <p9>
+
+#poly1 amber 1.2
+#p7 labelShow
+
+@p10 is P of 1.7527815881725344 -6.431946349641821
+@p11 is P of 9.190672153635115 -0.6249047401310774
+@l2 is L of <p10> <p11>
+@p12 is P of 3.3683889650967833 -0.9297363206828225
+@p13 is P of 7.102575826855661 -4.785855814662398
+@c7 is C:op of <p12> <p13>
+@dp3 is Ins^cl of <c7> <l2>
+ #dp3 fertileWaveLink
 
 """);
+
+      //print(gLib.method2type['C']);
+
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print('错误: $e');

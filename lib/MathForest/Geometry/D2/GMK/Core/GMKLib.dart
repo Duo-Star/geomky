@@ -1,11 +1,13 @@
 library;
 
 import 'dart:math' as math;
+
 import '../../../../Algebra/Functions/Main.dart' as funcs;
 import '../../Intersection/Line520.dart' as l520;
-
+import '../../Intersection/Other2DInsSolver.dart' as other_ins_solver;
 
 import '../../Linear/Vector.dart';
+import '../../Linear/Polygon.dart';
 import '../../Linear/Line.dart';
 import '../../Linear/Triangle.dart';
 import '../../Conic/Circle.dart';
@@ -33,7 +35,7 @@ import 'GMKLib.dart' as lib;
 // 几何对象
 import '../Monxiv/GraphOBJ.dart';
 
-dynamic getVar(itemFactor, gmkData) {
+dynamic getVar(dynamic itemFactor, gmkData) {
   if (itemFactor.runtimeType == String) {
     String label = compiler.subStringBetween(itemFactor, '<', '>');
     return gmkData.data[label]?.obj;
@@ -42,145 +44,240 @@ dynamic getVar(itemFactor, gmkData) {
   }
 }
 
+List<dynamic> getVarList(List<dynamic> factorList, gmkData) {
+  List<dynamic> result = [];
+  for (var item in factorList) {
+    result.add(getVar(item, gmkData));
+  }
+  return result;
+}
+
 dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
-  switch (gmkCommand.method) {
+  String method = gmkCommand.method;
+  switch (method) {
     case 'N':
-      return (getVar(gmkCommand.factor[0], gmkData), 'num');
+      return (getVar(gmkCommand.factor[0], gmkData), method2type[method]);
 
     case 'N^add':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1+n2, 'num');
+      return (n1 + n2, method2type[method]);
 
     case 'N^sub':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1-n2, 'num');
+      return (n1 - n2, method2type[method]);
 
     case 'N^ops':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (-n1, 'num');
+      return (-n1, method2type[method]);
 
     case 'N^mul':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1*n2, 'num');
+      return (n1 * n2, method2type[method]);
 
     case 'N^div':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1/n2, 'num');
+      return (n1 / n2, method2type[method]);
 
     case 'N^sin':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.sin(n1), 'num');
+      return (math.sin(n1), method2type[method]);
 
     case 'N^cos':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.cos(n1), 'num');
+      return (math.cos(n1), method2type[method]);
 
     case 'N^tan':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.tan(n1), 'num');
+      return (math.tan(n1), method2type[method]);
 
     case 'N^abs':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (funcs.sin(n1), 'num');
+      return (funcs.sin(n1), method2type[method]);
 
     case 'N^sgn':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (funcs.sgn(n1), 'num');
+      return (funcs.sgn(n1), method2type[method]);
 
     case 'DN':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (DNum(n1, n2), 'DNum');
+      return (DNum(n1, n2), method2type[method]);
 
     case 'TN':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
       num n3 = getVar(gmkCommand.factor[2], gmkData);
-      return (TNum(n1, n2, n3), 'TNum');
+      return (TNum(n1, n2, n3), method2type[method]);
 
     case 'QN':
       num n1 = getVar(gmkCommand.factor[0], gmkData);
       num n2 = getVar(gmkCommand.factor[1], gmkData);
       num n3 = getVar(gmkCommand.factor[2], gmkData);
       num n4 = getVar(gmkCommand.factor[3], gmkData);
-      return (QNum(n1, n2, n3, n4), 'QNum');
+      return (QNum(n1, n2, n3, n4), method2type[method]);
 
     case 'P':
       num x = getVar(gmkCommand.factor[0], gmkData);
       num y = getVar(gmkCommand.factor[1], gmkData);
-      return (Vector(x, y), 'Vector');
+      return (Vector(x, y), method2type[method]);
 
     case 'P:v':
       Vector p = getVar(gmkCommand.factor[0], gmkData);
-      return (p, 'Vector');
+      return (p, method2type[method]);
 
     case 'Ins^ll':
       Line l1 = getVar(gmkCommand.factor[0], gmkData);
       Line l2 = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xLineLine(l1, l2), 'Vector');
+      return (l520.xLineLine(l1, l2), method2type[method]);
+
+    case const ('Ins^cc'):
+      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
+      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
+      return (other_ins_solver.xCircleCircle(c1, c2), method2type[method]);
+
+    case const ('Ins^cl'):
+      Circle c = getVar(gmkCommand.factor[0], gmkData);
+      Line l = getVar(gmkCommand.factor[1], gmkData);
+      return (l520.xCircleLine(c, l), method2type[method]);
+
+    case const ('Ins^lc'):
+      Line l = getVar(gmkCommand.factor[0], gmkData);
+      Circle c = getVar(gmkCommand.factor[1], gmkData);
+      return (l520.xCircleLine(c, l), method2type[method]);
+
+    case const ('Ins^cl_index'):
+      Circle c = getVar(gmkCommand.factor[0], gmkData);
+      Line l = getVar(gmkCommand.factor[1], gmkData);
+      int index = getVar(gmkCommand.factor[2], gmkData);
+      DNum dn = l520.xCircleLineTheta(c, l);
+      return (c.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
+
+    case const ('Ins^cc_index'):
+      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
+      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
+      int index = getVar(gmkCommand.factor[2], gmkData);
+      DNum dn = other_ins_solver.xCircleCircleTheta(c1, c2);
+      return (c2.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
 
     case 'L':
       Vector p1 = getVar(gmkCommand.factor[0], gmkData);
       Vector p2 = getVar(gmkCommand.factor[1], gmkData);
-      return (Line.new2P(p1, p2), 'Line');
+      return (Line.new2P(p1, p2), method2type[method]);
 
     case 'L:pv':
       Vector p = getVar(gmkCommand.factor[0], gmkData);
       Vector v = getVar(gmkCommand.factor[1], gmkData);
-      return (Line(p, v), 'Line');
+      return (Line(p, v), method2type[method]);
 
     case 'C':
       Vector p = getVar(gmkCommand.factor[0], gmkData);
       num r = getVar(gmkCommand.factor[1], gmkData);
-      return (Circle(p, r), 'Circle');
+      return (Circle(p, r), method2type[method]);
 
     case 'C:op':
       Vector o = getVar(gmkCommand.factor[0], gmkData);
       Vector p = getVar(gmkCommand.factor[1], gmkData);
-      return (Circle.new2P(o, p), 'Circle');
+      return (Circle.new2P(o, p), method2type[method]);
 
     case 'P^mid':
       Vector p1 = getVar(gmkCommand.factor[0], gmkData);
       Vector p2 = getVar(gmkCommand.factor[1], gmkData);
-      return (p1.mid(p2), 'Vector');
+      return (p1.mid(p2), method2type[method]);
 
     case 'IndexP':
       dynamic obj = getVar(gmkCommand.factor[0], gmkData);
       num index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexPoint(index), 'Vector');
+      return (obj.indexPoint(index), method2type[method]);
 
     case 'IndexDP':
       dynamic obj = getVar(gmkCommand.factor[0], gmkData);
       DNum index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexDPoint(index), 'DPoint');
+      return (obj.indexDPoint(index), method2type[method]);
 
     case 'IndexQP':
       dynamic obj = getVar(gmkCommand.factor[0], gmkData);
       QNum index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexQPoint(index), 'QPoint');
+      return (obj.indexQPoint(index), method2type[method]);
 
     case 'QP^deriveL':
       QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.deriveL, 'Line');
+      return (qp.deriveL, method2type[method]);
 
     case 'QP^heart':
       QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.heart, 'Vector');
+      return (qp.heart, method2type[method]);
+
+    case const ('DP^l'):
+      DPoint dp = getVar(gmkCommand.factor[0], gmkData);
+      return (dp.l, method2type[method]);
+
+    case const ('DP^index'):
+      DPoint dp = getVar(gmkCommand.factor[0], gmkData);
+      int index = getVar(gmkCommand.factor[1], gmkData);
+      return ((index == 1) ? dp.p1 : dp.p2, method2type[method]);
 
     case 'C0':
       Vector p0 = getVar(gmkCommand.factor[0], gmkData);
       Vector p1 = getVar(gmkCommand.factor[1], gmkData);
       Vector p2 = getVar(gmkCommand.factor[2], gmkData);
-      return (Conic0(p0, p1-p0, p2-p0), 'Conic0');
+      return (Conic0(p0, p1 - p0, p2 - p0), method2type[method]);
+
+    case const ('Poly'):
+      List ds = getVarList(gmkCommand.factor, gmkData);
+      for (var key in ds) {
+        // print(key.toString());
+      }
+      return (Polygon(ds.cast<Vector>()), method2type[method]);
 
     default:
       return (null, 'e-findMethod:none');
   }
 }
+
+Map<String, String> method2type = {
+  'N': 'num',
+  'N^add': 'num',
+  'N^sub': 'num',
+  'N^ops': 'num',
+  'N^mul': 'num',
+  'N^div': 'num',
+  'N^sin': 'num',
+  'N^cos': 'num',
+  'N^tan': 'num',
+  'N^abs': 'num',
+  'N^sgn': 'num',
+  'DN': 'DNum',
+  'TN': 'TNum',
+  'QN': 'QNum',
+  'P': 'Vector',
+  'P:v': 'Vector',
+  'P^mid': 'Vector',
+  'L': 'Line',
+  'L:pv': 'Line',
+  'Ins^ll': 'Vector',
+  'Ins^cl_index': 'Vector',
+  'C': 'Circle',
+  'C:op': 'Circle',
+  'Ins^cc': 'DPoint',
+  'Ins^lc': 'DPoint',
+  'Ins^cl': 'DPoint',
+  'Ins^cc_index': 'Vector',
+  'IndexP': 'Vector',
+  'IndexDP': 'DPoint',
+  'IndexQP': 'QPoint',
+  'DP^index': 'Vector',
+  'QP^deriveL': 'Line',
+  'QP^heart': 'Vector',
+  'DP^l': 'Line',
+  'C0': 'Conic0',
+  'Poly': 'Polygon',
+};
+
+
 
 /*
 Map<String, dynamic> doc = {

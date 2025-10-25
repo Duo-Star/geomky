@@ -63,7 +63,8 @@ class GMKCore {
       String label = itemCommand.label;
       gStyle.GOBJStyle style = itemCommand.style;
       var (obj, type) = lib.analysis(itemCommand, gmkData);
-      itemCommand.type = type;
+      //itemCommand.type = type;
+      // 改为编译时生成type
       if (obj == null) {
         if (type == 'e-findMethod:none') {
           Exception(

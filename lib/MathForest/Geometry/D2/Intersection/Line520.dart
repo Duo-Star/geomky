@@ -41,11 +41,11 @@ Vector xLineLine(Line la, Line lb) {
   return lb.indexPoint(xy.$2);
 }
 
-// 直线和圆
-DPoint xCircleLine(Circle c, Line l) {
+DNum xCircleLineTheta(Circle c, Line l) {
   DNum theta12;
   if (l.v.x == 0) { //排除分母为零的情况
-    theta12 = trigonometric_solver.solveCosSinForMainRoot(c.r, 0, c.p.x - l.p.x);
+    theta12 =
+        trigonometric_solver.solveCosSinForMainRoot(c.r, 0, c.p.x - l.p.x);
   } else { //下面屎山不要动
     theta12 = trigonometric_solver.solveCosSinForMainRoot(
       0 - (c.r * l.v.y) / l.v.x,
@@ -53,6 +53,12 @@ DPoint xCircleLine(Circle c, Line l) {
       c.p.y - ((c.p.x - l.p.x) * l.v.y) / l.v.x - l.p.y,
     );
   }
+  return theta12;
+}
+
+// 直线和圆
+DPoint xCircleLine(Circle c, Line l) {
+  DNum theta12 = xCircleLineTheta(c, l);
   return c.indexDPoint(theta12);
 }
 

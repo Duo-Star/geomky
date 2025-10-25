@@ -143,20 +143,61 @@ class Conic0 {
   }
 
   //
-  num thetaClosestP2P(Vector P){
-    num t0 ;
-    if (u.len>=v.len) {
-      if ((P-p).dot(v)>0 ){ t0=pi/2; }else{ t0=-pi/2; }
-    } else {
-      if ((P-p).dot(u)>0) { t0=0; }else{ t0=pi; }
+  num thetaClosestP2P(Vector P, {double tolerance = 1e-8, int maxIterations = 50}) {
+    // 局部优化函数
+    num optimizeFrom(num t0) {
+      num t = t0;
+      num k = -0.5; // 初始学习率
+      num prevDistance = double.infinity;
+
+      for (var i = 0; i < maxIterations; i++) {
+        // 计算梯度（距离平方的导数）
+        num gradient = derDisP2P(P, t);
+
+        // 收敛检测
+        if (gradient.abs() < tolerance) break;
+
+        // 更新参数
+        t += k * gradient;
+
+        // 规范化角度到 [0, 2π)
+        t = t % (2 * pi);
+        if (t < 0) t += 2 * pi;
+
+        // 计算当前距离
+        num currentDistance = disP2P(P, t);
+
+        // 检查距离变化
+        if ((prevDistance - currentDistance).abs() < tolerance) break;
+        prevDistance = currentDistance;
+
+        // 衰减学习率
+        k *= 0.85; // 每次衰减15%
+      }
+      return t;
     }
-    num t=t0;
-    num k=-0.05;
-    for (var i = 0; i < 12; i++) {
-      t = t + k * derDisP2P(P,t);
-      k=k/exp(0.0618*i);
+
+    // 初始点：覆盖一个周期 [0, 2π)
+    List<num> initialThetas = [];
+    for (int i = 0; i < 12; i++) {
+      initialThetas.add(i * pi / 6); // 每30°一个点
     }
-    return t;
+
+    // 优化每个初始点并找到最佳结果
+    num bestTheta = initialThetas[0];
+    num minDistance = double.infinity;
+
+    for (num t0 in initialThetas) {
+      num theta = optimizeFrom(t0);
+      num distance = disP2P(P, theta);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        bestTheta = theta;
+      }
+    }
+
+    return bestTheta;
   }
 
   Vector pClosestP2P(Vector P){
@@ -165,6 +206,10 @@ class Conic0 {
 
   num disClosestP2P(Vector P){
     return P.dis(pClosestP2P(P));
+  }
+
+  num disP(Vector P){
+    return disClosestP2P(P);
   }
 
 

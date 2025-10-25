@@ -1,6 +1,7 @@
 // 平面骈点
 import '../Linear/Line.dart';
 import '../Linear/Vector.dart';
+import '../../../Algebra/Trunk/Fertile/DNum.dart';
 
 /*
 共生双点，没有区分方法和必要
@@ -25,6 +26,10 @@ class DPoint {
   Vector get mid => (p1 + p2) / 2;
 
   Line get l => Line.new2P(p1, p2);
+
+  DNum disP(Vector p0){
+    return DNum(p0.dis(p1), p0.dis(p2));
+  }
 
   static DPoint zero = DPoint(Vector.zero, Vector.zero);
   static DPoint inf = DPoint(Vector.inf, Vector.inf);

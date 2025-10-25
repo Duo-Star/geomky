@@ -1,6 +1,7 @@
 //
 
 import 'dart:math';
+import '../../../Algebra/Functions/Main.dart' as funcs;
 //
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../Algebra/Trunk/Fertile/QNum.dart';
@@ -36,6 +37,10 @@ class Circle {
     indexPoint(theta.n3),
     indexPoint(theta.n4),
   );
+
+  num disP(Vector p0){
+    return funcs.abs((p0 - p).len - r);
+  }
 
   @override
   String toString() {

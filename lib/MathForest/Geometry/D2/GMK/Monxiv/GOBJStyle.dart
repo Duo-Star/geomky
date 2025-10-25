@@ -2,13 +2,13 @@
 import 'dart:ui';
 
 //
-Color red = Color.fromARGB(255, 255, 0, 36);
-Color blue = Color.fromARGB(255, 0, 153, 255);
+Color red = Color.fromARGB(255, 224, 6, 12);
+Color blue = Color.fromARGB(255, 21, 101, 192);
 Color cyan = Color.fromARGB(255, 51, 255, 204);
-Color amber = Color.fromARGB(255, 255, 204, 51);
+Color amber = Color.fromARGB(255, 248, 196, 46);
 Color pakoo = Color.fromARGB(255, 153, 102, 255);
 Color brown = Color.fromARGB(255, 153, 102, 0);
-Color gray = Color.fromARGB(255, 128, 128, 128);
+Color gray = Color.fromARGB(255, 85, 85, 85);
 Color teal = Color.fromARGB(255, 0, 128, 128);
 Color forest = Color.fromARGB(255, 0, 153, 0);
 Color yduo = Color.fromARGB(255, 102, 204, 255);
@@ -17,8 +17,8 @@ Color hacker = Color.fromARGB(255, 0, 0, 255);
 Color cinnabar = Color.fromARGB(255, 205, 0, 32);
 Color dazzling = Color.fromARGB(255, 255, 255, 56);
 Color indigo = Color.fromARGB(255, 75, 0, 130);
-Color purple = Color.fromARGB(255, 127, 0, 255);
-Color black = Color.fromARGB(255, 8, 8, 8);
+Color purple = Color.fromARGB(255, 102, 0, 204);
+Color black = Color.fromARGB(246, 32, 32, 32);
 Color white = Color.fromARGB(255, 246, 246, 246);
 
 // shape
@@ -30,13 +30,17 @@ String hollow = 'hollow';
 String xDot = 'xDot';
 String biasDot = 'biasDot';
 
+//show
+
+
 //
 class GOBJStyle {
-  Color color = black;
-  bool show = false;
-  num size = 1;
-  bool labelShow = false;
-  String shape = 'nShape';
+  Color color = black; //
+  bool show = true; //
+  num size = 1; //
+  num opacity = 0; //暧昧
+  bool labelShow = false; //
+  String shape = 'nShape'; //
   bool trace = false;
   bool fertileWaveLink = false;
 
@@ -44,6 +48,25 @@ class GOBJStyle {
 
   static GOBJStyle none() {
     return GOBJStyle();
+  }
+
+  static GOBJStyle apply(String type){
+    GOBJStyle result = GOBJStyle();
+    switch (type) {/*
+      case const ('Vector'):
+        result.color = gray;
+      case const ('Line'):
+        result.color = gray;
+      case const ('Circle'):
+        result.color = gray;*/
+      case const ('DPoint'):
+        result.color = purple;
+      case const ('Conic0'):
+        result.color = amber;
+      default:
+        result.color = gray;
+    }
+    return result;
   }
 
   @override
@@ -103,3 +126,10 @@ List<String> shape = [
   'xDot',
   'biasDot',
 ];
+
+List<String> show = ['show', 'hide'];
+
+List<String> labelShow = ['labelShow', 'labelHide'];
+
+List<String> fertileWaveLink = ['fertileWaveLink', 'fertileWaveLinkHide'];
+

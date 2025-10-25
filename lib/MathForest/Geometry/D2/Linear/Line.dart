@@ -44,6 +44,15 @@ class Line {
     return v.isVertical (other.v);
   }
 
+  Vector projectP(Vector p0) {
+    return p + (p0 - p).projectVec(v);
+  }
+
+  num disP(Vector p0){
+    return (p0-projectP(p0)).len;
+  }
+
+
   Vector operator [](num index) {
     return indexPoint(index);
   }
