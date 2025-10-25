@@ -46,6 +46,12 @@ dev_dependencies:
 # 以下部分特定于Flutter包。
 flutter:
 
+  fonts:
+    - family: Maple  # 定义字体家族名称
+      fonts:
+        - asset: assets/fonts/MapleMono-Regular.ttf  # 指向字体文件的路径
+
+
   # 以下行确保Material Icons字体包含在您的应用程序中，
   # 以便您可以使用material Icons类中的图标。
   uses-material-design: true

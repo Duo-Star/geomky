@@ -133,10 +133,15 @@ dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
       Vector v = getVar(gmkCommand.factor[1], gmkData);
       return (Line(p, v), 'Line');
 
-    case 'C:pr':
+    case 'C':
       Vector p = getVar(gmkCommand.factor[0], gmkData);
       num r = getVar(gmkCommand.factor[1], gmkData);
       return (Circle(p, r), 'Circle');
+
+    case 'C:op':
+      Vector o = getVar(gmkCommand.factor[0], gmkData);
+      Vector p = getVar(gmkCommand.factor[1], gmkData);
+      return (Circle.new2P(o, p), 'Circle');
 
     case 'P^mid':
       Vector p1 = getVar(gmkCommand.factor[0], gmkData);
@@ -166,9 +171,14 @@ dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
       QPoint qp = getVar(gmkCommand.factor[0], gmkData);
       return (qp.heart, 'Vector');
 
+    case 'C0':
+      Vector p0 = getVar(gmkCommand.factor[0], gmkData);
+      Vector p1 = getVar(gmkCommand.factor[1], gmkData);
+      Vector p2 = getVar(gmkCommand.factor[2], gmkData);
+      return (Conic0(p0, p1-p0, p2-p0), 'Conic0');
 
     default:
-      return (null, '?type');
+      return (null, 'e-findMethod:none');
   }
 }
 

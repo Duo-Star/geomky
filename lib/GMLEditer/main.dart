@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 // GML的关键字和类型
@@ -5,16 +7,25 @@ const Set<String> gmlKeywords = {'is', 'of'};
 
 const Set<String> gmlTypes = {
   'N',
+  'N^mul',
   'P',
-  'Cir',
+  'P:v',
+  'P^mid',
+  'QP^heart',
+  'QP^deriveL',
+  'C',
+  'C:pr',
   'MidP',
   'L',
   'Ins',
   'C0',
   'F',
-  'QNum',
-  'Index',
+  'QN',
+  'IndexP',
+  'IndexQP',
 };
+
+const Set<String> gmkConst = {'.T', '.E', '.PI'};
 
 // =========================================================================
 // 自定义TextEditingController
@@ -26,63 +37,75 @@ class GmlSyntaxHighlighterController extends TextEditingController {
   GmlSyntaxHighlighterController(this.context);
 
   // 令牌定义
-  static const String identifier = r'@([a-zA-Z0-9_]+)';
-  static const String number = r'-?\d+(\.\d+)?';
+  static const String label = r'@(\w+)';
+  static const String number = r'(?<![a-zA-Z])-?\d+(?:\.\d+)?(?![a-zA-Z])';
   static const String comment = r'``.*?``'; // 简化后的注释
-  static const String access = r'<\.?[a-zA-Z0-9_]+>'; // <...>访问
+  static const String access = r'<(\w+)>'; // <...>访问
+  static const String accessL = r'<'; //
+  static const String accessR = r'>'; //
   static const String array = r'\[.*?\]'; // [...]数组
+  static const String notMethod = r'<(\w+)>';
+  static const String methodC = r'(\w+):(\w+)'; //
+  static const String methodM = r'(\w+)\^(\w+)'; //
+  static const String constV = r'\.(\w+)'; //
 
   // 高亮显示样式
   TextStyle defaultStyle = TextStyle(
-    color: Colors.black,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    color: Colors.white70,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
   TextStyle keywordStyle = TextStyle(
-    color: Colors.black87,
-    fontWeight: FontWeight.w800,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    color: Colors.red[400],
+    //fontWeight: FontWeight.w800,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
-  TextStyle typeStyle = TextStyle(
-    color: Colors.amber[700],
-    fontWeight: FontWeight.bold,
-    fontFamily: 'Consolas',
-    fontSize: 18,
-  );
-  TextStyle identifierStyle = TextStyle(
-    color: Colors.indigo[400],
-    fontWeight: FontWeight.bold,
-    fontFamily: 'Consolas',
-    fontSize: 18,
-  );
-  TextStyle numberStyle = TextStyle(
+  TextStyle methodStyle = TextStyle(
     color: Colors.teal,
     fontWeight: FontWeight.bold,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    fontFamily: 'Maple',
+    fontSize: 24,
+  );
+  TextStyle labelStyle = TextStyle(
+    color: Colors.amber[400],
+    fontWeight: FontWeight.bold,
+    fontFamily: 'Maple',
+    fontSize: 24,
+  );
+  TextStyle numberStyle = TextStyle(
+    color: Colors.blue[300],
+    fontWeight: FontWeight.bold,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
   TextStyle commentStyle = TextStyle(
     color: Colors.green,
-    //fontStyle: FontStyle.italic,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    fontStyle: FontStyle.italic,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
   TextStyle errorStyle = TextStyle(
     color: Colors.black,
     decorationStyle: TextDecorationStyle.wavy,
     decoration: TextDecoration.underline,
     decorationColor: Colors.red,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
 
   TextStyle factorStyle = TextStyle(
-    color: Colors.black87,
-    decoration: TextDecoration.underline,
-    decorationColor: Colors.green,
-    fontFamily: 'Consolas',
-    fontSize: 18,
+    color: Colors.red,
+    fontWeight: FontWeight.bold,
+    fontFamily: 'Maple',
+    fontSize: 24,
+  );
+
+  TextStyle constStyle = TextStyle(
+    color: Colors.purple,
+    fontWeight: FontWeight.bold,
+    fontFamily: 'Maple',
+    fontSize: 24,
   );
 
   // 处理文本高亮显示的方法
@@ -107,88 +130,68 @@ class GmlSyntaxHighlighterController extends TextEditingController {
       int offset = 0;
       final lineChildren = <TextSpan>[];
 
-      // 闭包检查（简单的<>和[]平衡检查）
-      // 要进行更精确的检查，需要基于堆栈的解析器
-      int angleBracketBalance = 0;
-      int squareBracketBalance = 0;
-
-      for (int j = 0; j < line.length; j++) {
-        final char = line[j];
-        if (char == '<') angleBracketBalance++;
-        if (char == '>') angleBracketBalance--;
-        if (char == '[') squareBracketBalance++;
-        if (char == ']') squareBracketBalance--;
-      }
-
-      // 将平衡被破坏的整行标记为错误
-      bool lineHasClosureError =
-          angleBracketBalance != 0 || squareBracketBalance != 0;
-      if (lineHasClosureError) {
-        hasError = true;
-      }
-
       // 按令牌单位处理（基于正则表达式的简易解析器）
       // 这种基于正则表达式的方法并不完美，但对于高亮显示是有效的
       final pattern = RegExp(
-        '($comment)|($identifier)|($access)|($array)|($number)|([a-zA-Z]+)',
+        '($comment)|($label)|($accessL)|($accessR)|($array)|($methodC)|($methodM)|($number)|($constV)|([a-zA-Z]+)',
       );
 
-      pattern.allMatches(line).forEach((match) {
-        // 处理未匹配的部分（空格等）
-        if (match.start > offset) {
-          final plainText = line.substring(offset, match.start);
-          lineChildren.add(TextSpan(text: plainText, style: baseStyle));
-        }
+      if (1 == 1) {
+        pattern.allMatches(line).forEach((match) {
+          // 处理未匹配的部分（空格等）
+          if (match.start > offset) {
+            final plainText = line.substring(offset, match.start);
+            lineChildren.add(TextSpan(text: plainText, style: baseStyle));
+          }
 
-        // 处理匹配的令牌
-        final token = match.group(0)!;
-        TextStyle currentStyle = baseStyle;
+          // 处理匹配的令牌
+          String token = match.group(0)!;
+          TextStyle currentStyle = baseStyle;
+          //print(token);
 
-        // 注释
-        if (RegExp(comment).hasMatch(token)) {
-          currentStyle = commentStyle;
-        } else {
-          if (RegExp(identifier).hasMatch(token)) {
-            // 标识符（@a, @b等）
-            currentStyle = identifierStyle;
+          // 注释
+          if (RegExp(comment).hasMatch(token)) {
+            currentStyle = commentStyle;
+          } else {
+            if (RegExp(label).hasMatch(token)) {
+              // 标识符（@a, @b等）
+              currentStyle = labelStyle;
+            }
+            // 值的访问（<A>, <.o>等）// <...> 和 [...] 保持原样
+            else if (RegExp(access).hasMatch(token)) {
+              //currentStyle = factorStyle;
+            } else if (RegExp(accessL).hasMatch(token)) {
+              currentStyle = labelStyle;
+            } else if (RegExp(accessR).hasMatch(token)) {
+              currentStyle = labelStyle;
+            } else if (RegExp(number).hasMatch(token)) {
+              currentStyle = numberStyle;
+            }
+            // 关键字和类型名
+            else if (gmlKeywords.contains(token)) {
+              currentStyle = keywordStyle;
+            } else if (gmlTypes.contains(token) &&
+                (!RegExp(notMethod).hasMatch(token))) {
+              currentStyle = methodStyle;
+            } else if (gmkConst.contains(token)) {
+              currentStyle = constStyle;
+            }
+            // 如果存在闭包错误，对整个行应用错误下划线
+            if (false || !line.contains('@')) {
+              currentStyle = errorStyle;
+            }
           }
-          // 值的访问（<A>, <.o>等）// <...> 和 [...] 保持原样
-          else if (RegExp(access).hasMatch(token) ||
-              RegExp(array).hasMatch(token)) {
-            currentStyle = factorStyle;
-          }
-          // 数值
-          else if (RegExp(number).hasMatch(token)) {
-            currentStyle = numberStyle;
-          }
-          // 关键字和类型名
-          else if (gmlKeywords.contains(token)) {
-            currentStyle = keywordStyle;
-          } else if (gmlTypes.contains(token)) {
-            currentStyle = typeStyle;
-          }
-          // 如果存在闭包错误，对整个行应用错误下划线
-          if (lineHasClosureError || !line.contains('@')) {
-            currentStyle = errorStyle;
-          }
-        }
-        lineChildren.add(TextSpan(text: token, style: currentStyle));
-        offset = match.end;
-      });
-
-
+          lineChildren.add(TextSpan(text: token, style: currentStyle));
+          offset = match.end;
+        });
+      }
 
       // 行的剩余文本
       if (line.length > offset) {
         final remainingText = line.substring(offset);
-        if (lineHasClosureError) {
-          lineChildren . add(TextSpan(text: remainingText, style: errorStyle));
-        } else {
-          lineChildren . add(TextSpan(text: remainingText, style: baseStyle));
-        }
+        lineChildren.add(TextSpan(text: remainingText, style: baseStyle));
       }
 
-      
       // 添加行尾换行（最后一行除外）
       if (i < lines.length - 1) {
         lineChildren.add(TextSpan(text: '\n', style: baseStyle));
@@ -216,17 +219,18 @@ class _GmlEditorPageState extends State<GmlEditorPage> {
   late GmlSyntaxHighlighterController _controller;
   String _currentGmlCode = '''
 ``this is a gml file , enjoy the gmk``
-@a is N of 1;
-@b is N of 1;
-@A is P of <a>, 1;
-@B is P of 2, -1;
-@cir is Cir of <A>, <B>;
-@M is MidP of <A>, <B>;
-@l is L of <A>,<B>;
-@dP1 is Ins of <l>,<cir>;
-@QNum_1 is QNum of [1, 1.5, 2, 2.5];
-``错误检查``
-@l is L of <A>,<B ;
+@A is P of 1 1
+@x is N of .E
+@B is P of <x> .PI
+@C is P:v of <2 2>
+@D is P^mid of <C> <A>
+
+@n1 is N^mul of <time> .E
+@qn1 is QN of 1 2 <n1> <time>
+@c1 is C:pr of <1 1> 1
+@qp1 is IndexQP of <c1> <qn1>
+@p1 is QP^heart of <qp1>
+@l1 is QP^deriveL of <qp1>
 
 ''';
 
@@ -284,58 +288,82 @@ class _GmlEditorPageState extends State<GmlEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('GML编辑器'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            // 修改为Row布局，添加统计信息
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'GML测试文本输入',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  '行数: $_lineCount | 字符: $_charCount',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(8.0),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(4.0),
-                ),
-                child: TextField(
-                  controller: _controller,
-                  maxLines: null, // 无限制行数
-                  expands: true, // 填充父级的Expanded
-                  cursorWidth: 2.5, // 光标宽度
-                  cursorRadius: const Radius.circular(3.0), // 光标圆角
-                  decoration: const InputDecoration(
-                    border: InputBorder.none, // 移除边框
-                    hintText: '在此输入GML代码...',
+    bool darkMode = false;
+    return MaterialApp(
+      // 根据状态选择主题
+      theme: darkMode ? ThemeData.dark() : ThemeData.light(),
+      home: Scaffold(
+        backgroundColor: Color.fromARGB(35, 255, 255, 255),
+        appBar: AppBar(
+          title: const Text('GML编辑器'),
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              // 修改为Row布局，添加统计信息
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'write gmk code here',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white60,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '行数: $_lineCount | 字符: $_charCount',
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4.0),
+                  ),
+                  child: ScrollConfiguration(
+                    behavior: ScrollBehavior().copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                      },
+                    ),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: 5e3, // 足够大的固定宽度
+                        child: TextField(
+                          controller: _controller,
+                          maxLines: null,
+                          style: TextStyle(height: 2.4),
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '在此输入GML代码...',
+                            isDense: true, // 减少垂直间距
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _onFabPressed,
-        tooltip: '执行',
-        child: const Icon(Icons.play_arrow),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _onFabPressed,
+          tooltip: '执行',
+          child: const Icon(Icons.play_arrow),
+        ),
       ),
     );
   }
@@ -359,6 +387,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
+        useSystemColors: true,
+        //fontFamily: 'Maple'
       ),
       home: const GmlEditorPage(),
     );

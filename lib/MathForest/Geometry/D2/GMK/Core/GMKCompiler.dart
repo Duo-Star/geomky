@@ -2,8 +2,13 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
+
+import '../Monxiv/GOBJStyle.dart' as gStyle;
+
 import 'GMKCommand.dart';
 import 'GMKStructure.dart';
+import 'GMKError.dart';
 
 import '../../Linear/Vector.dart';
 import '../../Conic/Circle.dart';
@@ -12,8 +17,10 @@ import '../../../../Algebra/Functions/Main.dart' as funcs;
 // 匹配删除 ``任意内容`` 格式的注释
 String removeComments(String input) {
   // .*? 表示非贪婪匹配，可以跨行匹配（因为使用了 dotAll: true）
-  final regex = RegExp(r'``.*?``', multiLine: true, dotAll: true);
-  return input.replaceAll(regex, '');
+  String result = '';
+  result = input.replaceAll(RegExp(r'``.*?``', multiLine: true, dotAll: true), '');
+  result = result.replaceAll(RegExp(r'/\*.*?\*/', multiLine: true, dotAll: true), '');
+  return result;
 }
 
 // 截取字符
@@ -146,32 +153,21 @@ GMKStructure goCompiler(String source) {
   List<String> lines = source_.split('\n');
   for (var line in lines) {
     if (line.startsWith('@')) {
-      //剔除首尾空格 - trim()
       try {
         String label = subStringBetween(line, '@', ' is ').trim();
         String method = subStringBetween(line, ' is ', ' of ').trim();
         List<dynamic> factor = str2Factor(extractAfter(line, ' of '));
         structure.addStep(GMKCommand(method, label, factor));
-      } on RangeError catch (e) {
-        Exception('字符串解析错误: 在行中找不到必要的分隔符');
-        Exception('原始行: "$line"');
-        Exception('错误详情: $e');
-      } on NoSuchMethodError catch (e) {
-        Exception('方法调用错误: 可能在 null 上调用方法');
-        Exception('请检查 substringBetween 的返回值');
-        Exception('错误详情: $e');
-      } on ArgumentError catch (e) {
-        Exception('参数错误: 传递给函数的参数无效');
-        Exception('错误详情: $e');
-      } on FormatException catch (e) {
-        Exception('格式错误: 数据格式不符合预期');
-        Exception('错误详情: $e');
-      } on TypeError catch (e) {
-        Exception('类型错误: 参数类型不匹配');
-        Exception('错误详情: $e');
-      } catch (e, stackTrace) {
-        Exception('未知错误: $e');
+      }  catch (e, stackTrace) {
+        Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
+      }
+    } else if (line.startsWith('#')) {
+      gStyle.GOBJStyle style = styleCompiler(line);
+      String label = subStringBetween(line, '#', ' ').trim();
+      structure.step[label]?.style = style;
+      if (kDebugMode) {
+        print('set style<$label>:${style.toString()}');
       }
     }
   }
@@ -239,6 +235,37 @@ String factor2Str(List<dynamic> factor) {
   }
   return str;
 }
+
+String gmkCommand2Str(GMKCommand gc) {
+  return '@${gc.label} is ${gc.method} of ${factor2Str(gc.factor)}';
+}
+
+
+gStyle.GOBJStyle styleCompiler(String sCode) {
+  gStyle.GOBJStyle result = gStyle.GOBJStyle.none();
+  String label = subStringBetween(sCode, '#', ' ').trim();
+  String sFactor = extractAfter(sCode, '#$label');
+  List<dynamic> factor = str2Factor(sFactor);
+  for (int i = 0; i < factor.length; i++) {
+    dynamic itemFactor = factor[i];
+    print(itemFactor.runtimeType);
+    if (gStyle.color.contains(itemFactor)) {
+      result.color = gStyle.colors[itemFactor]!;
+    } else if (gStyle.shape.contains(itemFactor)) {
+      result.shape = itemFactor;
+    } else if (itemFactor.runtimeType == double || itemFactor.runtimeType == int) {
+      result.size = itemFactor;
+    }
+  }
+  return result;
+}
+
+
+
+
+
+
+
 
 /*
 String str =

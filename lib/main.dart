@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 
@@ -37,7 +36,7 @@ class MyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     monxiv.setSize(size);
     monxiv.drawFramework(canvas);
-/*
+    /*
     Dots ds = Dots.randomFill(
       1000,
       RandomMaster.normal(mean: 5, stddev: 1.0),
@@ -52,13 +51,11 @@ class MyPainter extends CustomPainter {
 
     GMKData gmkData = gmkState.gmkData;
 
-    monxiv.drawGMKData(gmkData, canvas);
+    monxiv.setGMKData(gmkData);
+    monxiv.draw(canvas);
 
     //print(gmkData.data['A']);
-
   }
-
-
 
   @override
   bool shouldRepaint(covariant MyPainter oldDelegate) {
@@ -116,15 +113,13 @@ class _MyHomePageState extends State<MyHomePage>
 
     // print(_gmkState.time);
     // 加载源码
-    gmkCore.loadCode("""
+    try {
+      gmkCore.loadCode("""
 ``@A is P of 1 1
 @x is N of .E
 @B is P of <x> .PI
 @C is P:v of <2 2>
 @D is P^mid of <C> <A>
-``
-
-``
 @n1 is N^mul of <time> .E
 @qn1 is QN of 1 2 <n1> <time>
 @c1 is C:pr of <1 1> 1
@@ -132,32 +127,71 @@ class _MyHomePageState extends State<MyHomePage>
 @p1 is QP^heart of <qp1>
 @l1 is QP^deriveL of <qp1>
 ``
-
+``
+@p00 is P of 1 1
+@p01 is P of 2 1
 @n1 is N of 1
 @n2 is N of 2
 @n3 is N of 3
 @n4 is N of 5
-@c1 is C:pr of .O 1
-
+@c1 is C:op of <p00> <p01>
 @p1 is IndexP of <c1> <n1>
 @p2 is IndexP of <c1> <n2>
 @p3 is IndexP of <c1> <n3>
 @p4 is IndexP of <c1> <n4>
-
 @l12 is L of <p1> <p2>
 @l34 is L of <p3> <p4>
-
 @l23 is L of <p2> <p3>
 @l14 is L of <p1> <p4>
-
 @p5 is Ins^ll of <l12> <l34>
 @p6 is Ins^ll of <l23> <l14>
+@准线 is L1 of <p5> <p6>
+@p is IndexP of <c1> 1.2
+``
 
-@准线 is L of <p5> <p6>
+/*
+@p1 is P of 4 -1
+@p2 is P of 5 -1
+@c2 is C:op of <p1> <p2>
+@p3 is P:v of <1 1>
 
+@p4 is P of 3 4
+@p5 is P of 4 4
+@p6 is P of 2 5
+@c0_1 is C0 of <p4> <p5> <p6>
+
+#c2 red dotted 2
+#p1 indigo
+#p2 blue
+#p3 forest
+*/
+
+``
+[lua].|*
+this is a lua script
+c2 = gmk.getVar('c2')
+c2.setColor(0xffffff00)
+*|``
+
+
+@c1 is C of .O 1
+@c2 is C of .I 1
+@xL is L of .O .I
+@yL is L of .O .J
+@dp1 is Ins^CC of <c1> <c2>
+ @l1 is DP^l of <dp1>
+ @p1 is Ins^ll of <l1> <xL>
+ @c3 is C:op of <p1> .J
+ @p2 is Ins^cl_lamMin of <c3> <xL>
 
 
 """);
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('错误: $e');
+        print('堆栈跟踪: $stackTrace');
+      }
+    }
 
     // 持续重绘的动画控制器
     _animationController = AnimationController(
@@ -177,8 +211,6 @@ class _MyHomePageState extends State<MyHomePage>
     );
   }
 
-
-
   void _updateGMK(Timer timer) {
     // 更新物理状态
     GMKState newState = _gmkState.copy();
@@ -193,8 +225,9 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _runGMK(GMKState state, double dt) {
-
-    state.gmkData = gmkCore.run(state.time);
+    monxiv.gmkStructure = gmkCore.gmkStructure;
+    gmkCore.setTime(state.time);
+    state.gmkData = gmkCore.run();
     state.time += dt;
   }
 
@@ -214,9 +247,12 @@ class _MyHomePageState extends State<MyHomePage>
               trailing: IconButton(
                 onPressed: () {
                   String s = todo();
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('调试台：\n$s'),duration: const Duration(seconds: 10)));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('调试台：\n$s'),
+                      duration: const Duration(seconds: 10),
+                    ),
+                  );
                 },
                 icon: const Icon(Icons.accessibility_new_rounded),
                 tooltip: '调试',
@@ -238,7 +274,7 @@ class _MyHomePageState extends State<MyHomePage>
 
   @override
   Widget build(BuildContext context) {
-    monxiv.bgc = Theme.of(context).colorScheme.primaryContainer.withAlpha(30);
+    monxiv.bgc = Theme.of(context).colorScheme.primaryContainer.withAlpha(25);
     // 设置沉浸式状态栏
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     return SafeArea(
@@ -280,23 +316,33 @@ class _MyHomePageState extends State<MyHomePage>
                     title: const Text('GeoMKY - 最小测试单元'),
                     actions: <Widget>[
                       PopupMenuButton<String>(
+                        tooltip: '文件',
                         onSelected: (value) {
                           if (kDebugMode) {
                             print('选择了: $value');
+                            switch (value) {
+                              case const ('导出GMK代码'):
+                                print(gmkCore.generatedCode());
+
+                            }
                           }
                         },
                         itemBuilder: (BuildContext context) => [
                           const PopupMenuItem<String>(
-                            value: 'home',
-                            child: Text('保存'),
+                            value: '保存',
+                            child: Text('保存<暂不可用>'),
                           ),
                           const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('导入'),
+                            value: '导入',
+                            child: Text('导入<暂不可用>'),
                           ),
                           const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('加载'),
+                            value: '加载GMK代码',
+                            child: Text('加载GMK代码'),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: '导出GMK代码',
+                            child: Text('导出GMK代码'),
                           ),
                         ],
                         child: Container(
@@ -324,6 +370,7 @@ class _MyHomePageState extends State<MyHomePage>
                       SizedBox(width: 20),
 
                       PopupMenuButton<String>(
+                        tooltip: '新',
                         onSelected: (value) {
                           if (kDebugMode) {
                             print('选择了: $value');
@@ -434,6 +481,7 @@ class _MyHomePageState extends State<MyHomePage>
                       SizedBox(width: 6),
 
                       PopupMenuButton<String>(
+                        tooltip: '构造',
                         onSelected: (value) {
                           if (kDebugMode) {
                             print('选择了: $value');
@@ -516,6 +564,7 @@ class _MyHomePageState extends State<MyHomePage>
                       SizedBox(width: 6),
 
                       PopupMenuButton<String>(
+                        tooltip: '属性',
                         onSelected: (value) {
                           if (kDebugMode) {
                             print('选择了: $value');
@@ -676,10 +725,8 @@ class _MyHomePageState extends State<MyHomePage>
                                                     m(
                                                       '-----------参数列-----------',
                                                     );
-                                                    List<dynamic> fac =
-                                                        compiler.str2Factor(
-                                                          str,
-                                                        );
+                                                    List<dynamic> fac = compiler
+                                                        .str2Factor(str);
                                                     for (var item in fac) {
                                                       m(
                                                         '$item, type:${item.runtimeType}',
@@ -689,11 +736,7 @@ class _MyHomePageState extends State<MyHomePage>
                                                     m(
                                                       '-----------还原-----------',
                                                     );
-                                                    m(
-                                                      compiler.factor2Str(
-                                                        fac,
-                                                      ),
-                                                    );
+                                                    m(compiler.factor2Str(fac));
                                                     ScaffoldMessenger.of(
                                                       context,
                                                     ).showSnackBar(

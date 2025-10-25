@@ -1,13 +1,19 @@
 import 'dart:math';
 import 'dart:ui' as ui;
-
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import '../Core/GMKData.dart';
 
+//
+import '../../../../Algebra/Functions/Main.dart' as funcs;
+//
+import 'GraphOBJ.dart';
+import '../Core/GMKData.dart';
+import '../Core/GMKStructure.dart';
+
+//
 import '../../Fertile/DPoint.dart';
 import '../../Fertile/QPoint.dart';
-
+//
 import '../../Conic/Circle.dart';
 import '../../Conic/Conic0.dart';
 import '../../Conic/Conic1.dart';
@@ -16,6 +22,7 @@ import '../../Conic/XLine.dart';
 import '../../Conic/HLine.dart';
 import '../../Conic/Wipkyy.dart';
 
+//
 import '../../Linear/Vector.dart';
 import '../../Linear/Line.dart';
 import '../../Linear/Dots.dart';
@@ -26,13 +33,25 @@ class Monxiv {
   num lam = 10;
   bool infoMode = false;
   Vector size = Vector();
+  //
+  GMKData gmkData = GMKData.none();
+  GMKStructure gmkStructure = GMKStructure.newBlank();
+  //
+  Function requestToModifyGMKStructure = (Function f) {};
 
   // 用于处理手势
-  Offset _startLocalPosition = Offset.zero;
+  Vector _startLocalPosition = Vector.zero;
   Vector _startMonxivP = Vector();
   double _startMonxivLam = 1.0;
   bool _isDragging = false;
   List<num> monxivLamRestriction = [5, 1e3];
+
+  //
+  bool isObjDragging = false;
+  String objDraggingLabel = '';
+
+  //
+  String selectLabel = '';
 
   //
   num get xStart => -p.x / lam;
@@ -42,6 +61,10 @@ class Monxiv {
 
   void setSize(Size size_) {
     size = Vector(size_.width, size_.height);
+  }
+
+  void setGMKData(GMKData gd) {
+    gmkData = gd;
   }
 
   Paint defaultPaint = Paint()
@@ -67,7 +90,7 @@ class Monxiv {
   Paint gridPaint = Paint()
     ..color = Color.fromARGB(80, 0, 0, 0)
     ..style = PaintingStyle.stroke
-    ..strokeWidth = 2.0;
+    ..strokeWidth = 1.5;
 
   Color bgc = Color.fromARGB(200, 230, 230, 230);
   Color axisLabelColor = Colors.black54;
@@ -87,37 +110,82 @@ class Monxiv {
 
   // 处理缩放开始
   void handleScaleStart(ScaleStartDetails details) {
-    //print('开始移动');
+    print('开始移动');
+
     _isDragging = true;
-    _startLocalPosition = details.localFocalPoint;
+    _startLocalPosition = Vector(
+      details.localFocalPoint.dx,
+      details.localFocalPoint.dy,
+    );
     _startMonxivP = Vector(p.x, p.y); // 保存当前平移状态
     _startMonxivLam = lam.toDouble(); // 保存当前缩放状态
+    Vector tapCP = s2c(_startLocalPosition);
+    print(tapCP.toString());
+
+    String lb = select(tapCP);
+    if (lb != '') {
+      isObjDragging = true;
+      objDraggingLabel = lb;
+      selectLabel = lb;
+      print('开始拖拽${lb}');
+    } else {
+      print('取消拖拽${objDraggingLabel}');
+      isObjDragging = false;
+      objDraggingLabel = '';
+      selectLabel = '';
+    }
   }
 
   // 处理缩放更新（同时处理平移和缩放）
   void handleScaleUpdate(ScaleUpdateDetails details) {
-    //print('handleScaleUpdate');
+    print('handleScaleUpdate');
     if (details.scale != 1.0) {
-      // 缩放操作
+      // 缩放
       double newScale = _startMonxivLam * details.scale;
-      // 限制缩放范围
+      // 缩放范围
       lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
-    } else if (details.localFocalPoint != _startLocalPosition) {
-      // 平移操作（没有缩放，只有位置变化）
-      Offset delta = details.localFocalPoint - _startLocalPosition;
-      p = Vector(_startMonxivP.x + delta.dx, _startMonxivP.y + delta.dy);
+    } else if (details.localFocalPoint != _startLocalPosition.offset) {
+      // 平移
+      Vector sp = Vector(
+        details.localFocalPoint.dx,
+        details.localFocalPoint.dy,
+      );
+      Vector cp = s2c(sp);
+      if (isObjDragging) {
+        print(gmkStructure.step[objDraggingLabel]?.type);
+        switch (gmkStructure.step[objDraggingLabel]?.type) {
+          case const ('Vector'):
+            switch (gmkStructure.step[objDraggingLabel]?.method) {
+              case const ('P'):
+                gmkStructure.alterFactor(objDraggingLabel, [cp.x, cp.y]);
+              case const ('P:v'):
+                gmkStructure.alterFactor(objDraggingLabel, [Vector(cp.x, cp.y)]);
+            }
+          case const ('Circle'):
+          // 其他理论上不做处理
+        }
+      } else {
+        Offset delta = details.localFocalPoint - _startLocalPosition.offset;
+        p = Vector(_startMonxivP.x + delta.dx, _startMonxivP.y + delta.dy);
+      }
     }
   }
 
   // 处理缩放结束
   void handleScaleEnd(ScaleEndDetails details) {
     _isDragging = false;
+    if (isObjDragging) {
+      print('stopDrag$objDraggingLabel');
+      isObjDragging = false;
+      objDraggingLabel = '';
+    }
+    print('handleScaleEnd');
   }
 
   // 处理滚轮缩放
   void handlePointerSignal(PointerSignalEvent event) {
-    //print('滚轮缩放');
     if (event is PointerScrollEvent) {
+      print('滚轮缩放');
       double zoomFactor = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
       double newScale = lam * zoomFactor;
       lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
@@ -139,7 +207,34 @@ class Monxiv {
     Vector tapSP = Vector(globalPosition.dx, globalPosition.dy);
     Vector tapCP = s2c(tapSP);
 
-    //print(tapCP.toString());
+    String lb = select(tapCP);
+    if (lb != null) {
+      selectLabel = lb;
+    } else {
+      selectLabel = '';
+    }
+
+    print("单击：${tapCP.toString()}");
+  }
+
+  String select(tcp) {
+    num maxDx = size.len / 120;
+    num dx = 1e5; //spx
+    num ldx = dx;
+    String lb = '';
+    gmkData.forEach((String key, GraphOBJ gObj) {
+      switch (gObj.type) {
+        case const ("Vector"):
+          dx = (tcp - gObj.obj).len * lam;
+        case const ('Circle'):
+          dx = 5 + funcs.abs((tcp - gObj.obj.p).len - gObj.obj.r) * lam;
+      }
+      if (dx < maxDx && dx < ldx) {
+        ldx = dx;
+        lb = gObj.label;
+      }
+    });
+    return lb;
   }
 
   bool drawText(
@@ -157,9 +252,9 @@ class Monxiv {
         fontStyle: FontStyle.normal,
       ),
     );
-    builder.pushStyle(ui.TextStyle(
-      color: color?? Color.fromARGB(200,0,0,0)
-    ));
+    builder.pushStyle(
+      ui.TextStyle(color: color ?? Color.fromARGB(200, 0, 0, 0)),
+    );
     builder.addText(str);
     final ui.Paragraph paragraph = builder.build();
     paragraph.layout(ui.ParagraphConstraints(width: width));
@@ -167,9 +262,9 @@ class Monxiv {
     return true;
   }
 
-  bool drawPoint(Vector p, Canvas canvas, {Paint? paint}) {
+  bool drawPoint(Vector p, Canvas canvas, {Paint? paint, double? size}) {
     final Paint usedPaint = paint ?? defaultPointPaint;
-    canvas.drawCircle(c2s(p).offset, 3, usedPaint);
+    canvas.drawCircle(c2s(p).offset, size ?? 3.5, usedPaint);
     if (infoMode) {
       drawText(p.toString(), p, 12, 500.0, canvas);
     }
@@ -330,14 +425,32 @@ class Monxiv {
 
    */
 
-  bool drawGMKData(GMKData gmkData, canvas) {
+  bool draw(canvas) {
     //drawText('drawGMKData - error', c2s(Vector(10,10)), 12, 500, canvas);
     if (gmkData.count != 0) {
       for (var key in gmkData.data.keys) {
         switch (gmkData.data[key]?.type) {
           case const ("Vector"):
             Vector p = gmkData.data[key]?.obj;
-            drawPoint(p, canvas);
+            drawPoint(
+              p,
+              canvas,
+              paint: Paint()
+                ..color = gmkData.data[key]!.style.color
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2.5 * gmkData.data[key]!.style.size,
+            );
+            if (selectLabel == gmkData.data[key]?.label) {
+              drawPoint(
+                p,
+                canvas,
+                size: 10,
+                paint: Paint()
+                  ..color = gmkData.data[key]!.style.color.withAlpha(100)
+                  ..style = PaintingStyle.fill
+                  ..strokeWidth = 2.5 * gmkData.data[key]!.style.size,
+              );
+            }
             drawText('Point: $key', p, 12, 500, canvas);
           case const ("DPoint"):
             DPoint dp = gmkData.data[key]?.obj;
@@ -345,22 +458,43 @@ class Monxiv {
           case const ("QPoint"):
             QPoint qp = gmkData.data[key]?.obj;
             drawQPoint(qp, canvas);
-            //drawText('Point: $key', qp.p1, 12, 500, canvas);
+          //drawText('Point: $key', qp.p1, 12, 500, canvas);
           case const ("num"):
             Vector p = Vector(gmkData.data[key]?.obj);
             drawPoint(p, canvas);
             drawText('N: $key', p, 12, 500, canvas);
           case const ("Circle"):
             Circle circle = gmkData.data[key]?.obj;
-            drawCircle(circle, canvas);
+            drawCircle(
+              circle,
+              canvas,
+              paint: Paint()
+                ..color = gmkData.data[key]!.style.color
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2.5 * gmkData.data[key]!.style.size,
+            );
+            if (selectLabel == gmkData.data[key]?.label) {
+              drawCircle(
+                circle,
+                canvas,
+                paint: Paint()
+                  ..color = gmkData.data[key]!.style.color.withAlpha(80)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 8.0 * gmkData.data[key]!.style.size,
+              );
+            }
             drawText('Circle: $key', circle.p, 12, 500, canvas);
           case const ("Line"):
             Line l = gmkData.data[key]?.obj;
             drawLine(l, canvas);
-            drawText('Circle: $key', l.p, 12, 500, canvas);
+            drawText('Line: $key', l.p, 12, 500, canvas);
+          case const ("Conic0"):
+            Conic0 c0 = gmkData.data[key]?.obj;
+            drawConic0(c0, canvas);
+            drawText('Line: $key', c0.p, 12, 500, canvas);
 
           default:
-            // drawText('error: $key', Vector(0, 0), 12, 500, canvas);
+          // drawText('error: $key', Vector(0, 0), 12, 500, canvas);
         }
       }
     }
@@ -394,7 +528,14 @@ class Monxiv {
 
     for (int x = xStart.floor(); x <= xEnd; x++) {
       drawPoint(Vector(x), canvas, paint: axisPaint);
-      drawText("$x", Vector(x) + Vector(-0.1, -0.1), 12, 500, canvas, color: axisLabelColor);
+      drawText(
+        "$x",
+        Vector(x) + Vector(-0.1, -0.1),
+        12,
+        500,
+        canvas,
+        color: axisLabelColor,
+      );
       drawSegmentBy2P(
         Vector(x, yEnd),
         Vector(x, yStart),
@@ -405,7 +546,14 @@ class Monxiv {
 
     for (int y = yStart.floor(); y <= yEnd; y++) {
       drawPoint(Vector(0, y), canvas, paint: axisPaint);
-      drawText("$y", Vector(0, y) + Vector(-0.1, -0.1), 12, 500, canvas, color: axisLabelColor);
+      drawText(
+        "$y",
+        Vector(0, y) + Vector(-0.1, -0.1),
+        12,
+        500,
+        canvas,
+        color: axisLabelColor,
+      );
       drawSegmentBy2P(
         Vector(xStart, y),
         Vector(xEnd, y),
