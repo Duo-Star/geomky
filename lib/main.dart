@@ -3,9 +3,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+//
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as gLib;
+
+import 'MathForest/Geometry/D2/GMK/Monxiv/painter.dart' as painter;
+
+//
+import 'UI/debugLibrary.dart' as debug_library;
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +21,7 @@ void main() {
 class GMKState {
   GMKData gmkData = GMKData({});
   double time = 0.0;
-
+  String toolSelect = '';
   GMKState();
 
   // 复制方法，用于在状态更新时保持引用不变
@@ -23,6 +29,7 @@ class GMKState {
     final newState = GMKState();
     newState.gmkData = gmkData;
     newState.time = time;
+    newState.toolSelect = toolSelect;
     return newState;
   }
 }
@@ -36,12 +43,13 @@ class MyPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     monxiv.setSize(size);
+    if (monxiv.p.x == 0) {
+      monxiv.reset();
+    }
     monxiv.setCanvas(canvas);
-    monxiv.drawFramework();
     GMKData gmkData = gmkState.gmkData;
     monxiv.setGMKData(gmkData);
     monxiv.draw();
-
 
     /*
     Dots ds = Dots.randomFill(
@@ -50,11 +58,9 @@ class MyPainter extends CustomPainter {
       RandomMaster.normal(mean: 5, stddev: 1.0),
     );
     Polygon polygon = ds.tight;
-    monxiv.drawDots(ds, canvas);
-    monxiv.drawPolygon(polygon, canvas);
- */
-
-
+    painter.drawDots(ds, monxiv);
+    painter.drawPolygon(polygon, monxiv);
+     */
 
     //print(gmkData.data['A']);
   }
@@ -98,9 +104,7 @@ class _MyHomePageState extends State<MyHomePage>
   late Timer _physicsTimer;
 
   // 使用Monxiv管理视图变换
-  Monxiv monxiv = Monxiv()
-    ..reset(Vector(250, 250))
-    ..infoMode = false;
+  Monxiv monxiv = Monxiv();
 
   // 物理状态
   GMKState _gmkState = GMKState();
@@ -112,9 +116,13 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   void initState() {
     super.initState();
+    _inputController.addListener(() {
+      _inputValue = _inputController.text;
+    });
 
     // print(_gmkState.time);
     // 加载源码
+
     try {
       gmkCore.loadCode("""
 ``@A is P of 1 1
@@ -175,6 +183,7 @@ c2 = gmk.getVar('c2')
 c2.setColor(0xffffff00)
 *|``
 
+
 @c1 is C of .O 1
 @c2 is C of .I 1
 @xL is L of .O .I
@@ -193,28 +202,77 @@ c2.setColor(0xffffff00)
 @p5 is Ins^cc_index of <c5> <c1> 1
 @p6 is Ins^cc_index of <c6> <c1> 2
 @poly1 is Poly of .J <p3> <p5> <p6> <p4>
-
 @p7 is P of 3 4
 @p8 is P of 4 4
 @p9 is P of 2 5
 @c0_1 is C0 of <p7> <p8> <p9>
-
 #poly1 amber 1.2
 #p7 labelShow
 
-@p10 is P of 1.7527815881725344 -6.431946349641821
-@p11 is P of 9.190672153635115 -0.6249047401310774
+@p10 is P of 1.1975308641975309 -3.1049382716049383
+@p11 is P of 6.382716049382716 -1.154320987654321
 @l2 is L of <p10> <p11>
 @p12 is P of 3.3683889650967833 -0.9297363206828225
-@p13 is P of 7.102575826855661 -4.785855814662398
+@p13 is P of 4.37037037037037 -2.746913580246914
 @c7 is C:op of <p12> <p13>
 @dp3 is Ins^cl of <c7> <l2>
- #dp3 fertileWaveLink
+#l2 dotted
+#dp1 fertileWaveLink
+#dp2 fertileWaveLink
+#dp3 fertileWaveLink
+
+
+/*
+// 椭圆
+@p1 is P of 5 4
+@p2 is P of 2.2 3.3
+@p3 is P of 5 2
+@c0 is C0 of <p1> <p2> <p3>
+#c0 brown
+// 准备连线
+@F is P of 8.1 1.5
+@G is P of 7.5 2.5
+@H is P of 7.8 2.7
+// 连接
+@f is L of <F> <G>
+@g is L of <F> <H>
+// 染色 虚线
+#f red dotted
+#g forest dotted
+// 交骈点
+@dp1 is Ins^c0l of <c0> <f>
+@dp2 is Ins^c0l of <c0> <g>
+// 保持骈点视觉连接
+#dp1 fertileWaveLink
+#dp2 fertileWaveLink
+// 骈点处切线
+@xl1 is Tan^c0dp of <c0> <dp1>
+@xl2 is Tan^c0dp of <c0> <dp2>
+// 染色
+#xl1 red
+#xl2 forest
+// 叉线中心
+@M is XL^p of <xl1>
+@N is XL^p of <xl2>
+// 使用合点
+@qp is QP of <dp1> <dp2>
+#qp hide
+//
+@xla is QP^xl1 of <qp>
+@xlb is QP^xl2 of <qp>
+#xla gray
+#xlb gray
+//
+@Q is XL^p of <xla>
+@P is XL^p of <xlb>
+//
+@Temple is L of <Q> <P>
+#Temple amber 1.5
+*/
 
 """);
 
       //print(gLib.method2type['C']);
-
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print('错误: $e');
@@ -260,56 +318,62 @@ c2.setColor(0xffffff00)
     state.time += dt;
   }
 
-  Card debugZone(String title, String subTitle, Function todo) {
-    return Card(
-      margin: EdgeInsets.all(10),
-      elevation: 3.0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6.0)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.ac_unit_rounded),
-              title: Text(title),
-              subtitle: Text(subTitle),
-              trailing: IconButton(
-                onPressed: () {
-                  String s = todo();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('调试台：\n$s'),
-                      duration: const Duration(seconds: 10),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.accessibility_new_rounded),
-                tooltip: '调试',
-              ),
-            ),
-            // ... 其他内容
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _physicsTimer.cancel();
     _animationController.dispose();
+    _inputController.dispose();
     super.dispose();
+  }
+
+  // 1. 新增状态：控制左下角浮动卡片的可见性
+  bool toolCardVisible = false;
+  double tabBarH = 34;
+  double tabPageH = 80;
+  double toolCardTitleSize = 22;
+  double toolCardTextSize = 18;
+  //
+  // 新增状态变量：用于浮动卡片中的输入和下拉菜单
+  String _inputValue = 'name';
+  String _unitValue = 'P1';
+  String _modeValue = 'P1';
+  final List<String> _units = ['P1', 'P2', 'P3'];
+  final List<String> _modes = ['P1', 'P2', 'P3'];
+
+  // 输入框控制器
+  final TextEditingController _inputController = TextEditingController(
+    text: 'name',
+  );
+
+  // 2. 新增函数：切换卡片状态
+  void _toggleCardVisibility() {
+    setState(() {
+      toolCardVisible = !toolCardVisible;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    monxiv.bgc = Theme.of(context).colorScheme.primaryContainer.withAlpha(25);
-    // 设置沉浸式状态栏
+    // 你的原始变量
+    String selectLabel = monxiv.selectLabel;
+    //monxiv.bgc = Theme.of(context).colorScheme.surface..withAlpha(1);
+
+    // 设置沉浸式 UI
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
     return SafeArea(
       child: Scaffold(
+        // 新增：一个按钮来演示如何调用函数切换卡片
+        floatingActionButton: FloatingActionButton(
+          onPressed: _toggleCardVisibility,
+          tooltip: toolCardVisible ? '隐藏卡片' : '显示卡片',
+          child: Icon(
+            toolCardVisible ? Icons.visibility_off : Icons.visibility,
+          ),
+        ),
         body: Stack(
           children: [
+            // --- 绘图区 (第一层: 底部) ---
             Listener(
               onPointerSignal: monxiv.handlePointerSignal,
               child: GestureDetector(
@@ -319,14 +383,10 @@ c2.setColor(0xffffff00)
                 onDoubleTap: monxiv.handleDoubleTap,
                 onTap: monxiv.onTap,
                 onTapDown: monxiv.onTapDown,
-
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     return CustomPaint(
-                      painter: MyPainter(
-                        monxiv: monxiv,
-                        gmkState: _gmkState, // 传递物理状态给绘图器
-                      ),
+                      painter: MyPainter(monxiv: monxiv, gmkState: _gmkState),
                       size: Size(constraints.maxWidth, constraints.maxHeight),
                     );
                   },
@@ -334,513 +394,484 @@ c2.setColor(0xffffff00)
               ),
             ),
 
+            // --- 顶部 TabBar & TabBarView (第二层) ---
             Container(
-              height: 55,
-              color: Colors.blueGrey[100],
+              height: tabBarH + tabPageH,
+              color: Theme.of(context).colorScheme.surface,
               child: DefaultTabController(
-                initialIndex: 3,
+                initialIndex: (){
+                  return selectLabel==''?1:6;
+                }(),
                 length: 8,
-                child: Scaffold(
-                  appBar: AppBar(
-                    title: const Text('GeoMKY - 最小测试单元'),
-                    actions: <Widget>[
-                      PopupMenuButton<String>(
-                        tooltip: '文件',
-                        onSelected: (value) {
-                          if (kDebugMode) {
-                            print('选择了: $value');
-                            switch (value) {
-                              case const ('导出GMK代码'):
-                                print(gmkCore.generatedCode());
-
-                            }
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: '保存',
-                            child: Text('保存<暂不可用>'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '导入',
-                            child: Text('导入<暂不可用>'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '加载GMK代码',
-                            child: Text('加载GMK代码'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: '导出GMK代码',
-                            child: Text('导出GMK代码'),
-                          ),
-                        ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary, // 按钮背景色
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '文件',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                          ),
+                child: Column(
+                  children: [
+                    Container(
+                      height: tabBarH,
+                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      child: TabBar(
+                        isScrollable: true,
+                        indicatorColor: Theme.of(context).colorScheme.primary,
+                        labelColor: Theme.of(context).colorScheme.primary,
+                        unselectedLabelColor: Theme.of(
+                          context,
+                        ).colorScheme.primary,
+                        labelPadding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
                         ),
-                      ),
-
-                      SizedBox(width: 20),
-
-                      PopupMenuButton<String>(
-                        tooltip: '新',
-                        onSelected: (value) {
-                          if (kDebugMode) {
-                            print('选择了: $value');
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: 'home',
-                            child: Text('点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('直线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('圆周'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('亏-Conic0'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('齐-Conic1'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('超-Conic2'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('交叉'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('轨道'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('虚空'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('骈点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('合点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('骈叉'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('点集'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('三角'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('多边形'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('正矩形'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('文本'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('MD'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('按钮'),
-                          ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        tabAlignment: TabAlignment.start,
+                        dividerHeight: 1.0,
+                        tabs: [
+                          const Tab(text: '文件'),
+                          const Tab(text: '线性'),
+                          const Tab(text: '二次'),
+                          const Tab(text: '复生'),
+                          const Tab(text: '组件'),
+                          const Tab(text: '视图'),
+                          Tab(text: '属性:$selectLabel'),
+                          const Tab(text: '关于'),
                         ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '新',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
-
-                      SizedBox(width: 6),
-
-                      PopupMenuButton<String>(
-                        tooltip: '构造',
-                        onSelected: (value) {
-                          if (kDebugMode) {
-                            print('选择了: $value');
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('交点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'home',
-                            child: Text('平行线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('垂线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('中垂线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('角分线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('中点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('切线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('极线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('极点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('对称'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('反演'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('投影'),
-                          ),
-                        ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '构造',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(width: 6),
-
-                      PopupMenuButton<String>(
-                        tooltip: '属性',
-                        onSelected: (value) {
-                          if (kDebugMode) {
-                            print('选择了: $value');
-                          }
-                        },
-                        itemBuilder: (BuildContext context) => [
-                          const PopupMenuItem<String>(
-                            value: 'home',
-                            child: Text('圆心-中心'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'profile',
-                            child: Text('焦点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('准线'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('长轴端点'),
-                          ),
-                          const PopupMenuItem<String>(
-                            value: 'settings',
-                            child: Text('短轴端点'),
-                          ),
-                        ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text.rich(
-                            TextSpan(
-                              text: '属性',
-                              style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(width: 6),
-
-                      IconButton(
-                        icon: const Icon(Icons.account_balance),
-                        tooltip: '调试',
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute<void>(
-                              builder: (BuildContext context) {
-                                return Scaffold(
-                                  appBar: AppBar(
-                                    title: const Text('Debug Library'),
+                    ),
+                    Expanded(
+                      child: TabBarView(
+                        children: [
+                          // 文件选项卡内容 (水平滚动工具栏)
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  // 第一个按钮
+                                  OutlinedButton(
+                                    onPressed: () {
+                                      print('保存被点击');
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 45),
+                                      foregroundColor: Colors.black,
+                                      side: const BorderSide(
+                                        color: Color.fromARGB(0, 0, 0, 0),
+                                        width: 0,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                      ),
+                                    ),
+                                    child: const Text('保存'),
                                   ),
-                                  body: ListView(
+                                  // 按钮组 1
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Card(
-                                        margin: EdgeInsets.all(
-                                          10,
-                                        ), // 建议添加外边距，使卡片间有间隔[1](@ref)
-                                        elevation: 3.0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            6.0,
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
                                           ),
                                         ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              ListTile(
-                                                leading: const Icon(
-                                                  Icons.ac_unit_rounded,
-                                                ),
-                                                title: const Text('你会点下它吗'),
-                                                subtitle: const Text('awa'),
-                                                trailing: IconButton(
-                                                  onPressed: () {
-                                                    String msg = '控制台';
-                                                    void m(String str) {
-                                                      msg = '$msg\n$str';
-                                                    }
-
-                                                    m('欢迎找我玩');
-                                                    m('Duo-113530014');
-                                                    m('QQ-Group-663251235');
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(msg),
-                                                      ),
-                                                    );
-                                                  },
-                                                  icon: const Icon(
-                                                    Icons
-                                                        .accessibility_new_rounded,
-                                                  ),
-                                                  tooltip: '调试',
-                                                ),
-                                              ),
-                                              // ... 其他内容
-                                            ],
-                                          ),
-                                        ),
+                                        child: const Text('按钮1A'),
                                       ),
-
-                                      Card(
-                                        margin: EdgeInsets.all(10),
-                                        elevation: 3.0,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            6.0,
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
                                           ),
                                         ),
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              ListTile(
-                                                leading: const Icon(
-                                                  Icons.ac_unit_rounded,
-                                                ),
-                                                title: const Text('参数列解析器'),
-                                                subtitle: const Text(
-                                                  'GMKCompiler.str2Factor',
-                                                ),
-                                                trailing: IconButton(
-                                                  onPressed: () {
-                                                    String msg = '控制台';
-                                                    void m(String str) {
-                                                      msg = '$msg\n$str';
-                                                    }
-
-                                                    void lll([String? str]) {
-                                                      msg =
-                                                          '$msg\n-----------|${str ?? ''}|-----------';
-                                                    }
-
-                                                    String str =
-                                                        '1 1.23 .PI .NAN .INF a <b> .T <3 4> <1.23 4.56> <.PI .PI> <.NAN .INF> .I';
-                                                    m(
-                                                      '-----------原始-----------',
-                                                    );
-                                                    m(str);
-
-                                                    m(
-                                                      '-----------参数列-----------',
-                                                    );
-                                                    List<dynamic> fac = compiler
-                                                        .str2Factor(str);
-                                                    for (var item in fac) {
-                                                      m(
-                                                        '$item, type:${item.runtimeType}',
-                                                      );
-                                                    }
-
-                                                    m(
-                                                      '-----------还原-----------',
-                                                    );
-                                                    m(compiler.factor2Str(fac));
-                                                    ScaffoldMessenger.of(
-                                                      context,
-                                                    ).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text(msg),
-                                                      ),
-                                                    );
-                                                  },
-                                                  icon: const Icon(
-                                                    Icons
-                                                        .accessibility_new_rounded,
-                                                  ),
-                                                  tooltip: '调试',
-                                                ),
-                                              ),
-                                              // ... 其他内容
-                                            ],
-                                          ),
-                                        ),
+                                        child: const Text('按钮1B'),
                                       ),
-
-                                      debugZone('GMK编译', 'GMKCompiler', () {
-                                        String msg = '控制台';
-                                        void m(String str) {
-                                          msg = '$msg\n$str';
-                                        }
-
-                                        void lll([String? str]) {
-                                          msg =
-                                              '$msg\n-----------|${str ?? ''}|-----------';
-                                        }
-
-                                        String code = '''
-@A is P of 1 1
-@c is C of .O <.PI 0>
-@l is L of <A> .I
-                                                  ''';
-                                        lll();
-                                        m('gmk源代码\n$code');
-                                        GMKCore gmkCore = GMKCore();
-                                        gmkCore.loadCode(code);
-                                        lll('结构');
-                                        m(
-                                          'printStructure:\n${gmkCore.printStructure()}',
-                                        );
-                                        lll('生成代码');
-                                        m(
-                                          'generatedCode:\n${gmkCore.generatedCode()}',
-                                        );
-                                        return msg;
-                                      }),
                                     ],
                                   ),
-                                );
-                              },
+                                  VerticalDivider(
+                                    width: 1,
+                                    color: Colors.black54,
+                                  ),
+                                  // 按钮组 2
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮2A'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮2B'),
+                                      ),
+                                    ],
+                                  ),
+                                  VerticalDivider(
+                                    width: 1,
+                                    color: Colors.black54,
+                                  ),
+                                  // 按钮组 3
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮3A'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () {},
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮3B'),
+                                      ),
+                                    ],
+                                  ),
+                                  VerticalDivider(
+                                    width: 1,
+                                    color: Colors.black54,
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
+                          ),
+
+                          // 线性选项卡内容
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  OutlinedButton(
+                                    onPressed: () {
+                                      _gmkState.toolSelect = '点';
+                                      toolCardVisible = true;
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      minimumSize: const Size(0, 45),
+                                      foregroundColor: Colors.black,
+                                      side: const BorderSide(
+                                        color: Color.fromARGB(0, 0, 0, 0),
+                                        width: 0,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(0),
+                                      ),
+                                    ),
+                                    child: const Text('点'),
+                                  ),
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () {
+                                          print('按钮4A被点击');
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮4A'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () {
+                                          print('按钮4B被点击');
+                                        },
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(0, 45),
+                                          foregroundColor: Colors.black,
+                                          side: const BorderSide(
+                                            color: Color.fromARGB(0, 0, 0, 0),
+                                            width: 0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              0,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text('按钮4B'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          // 其他选项卡
+                          Center(
+                            child: Text(
+                              '二次内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '复生内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '组件内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '视图内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '属性内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                          Center(
+                            child: Text(
+                              '关于内容页',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                    /*
-                  bottom: TabBar(
-                    tabs: const <Widget>[
-                      Tab(text: '文件'),
-                      Tab(text: '新'),
-                      Tab(text: '构造'),
-                      Tab(text: '属性'),
-                      Tab(text: '操作')
-                    ],
-                  ),
-                   */
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
+            // --- 3. 新增浮动卡片 (第三层: 左下角) ---
+            if (toolCardVisible) // 使用条件渲染控制显示/隐藏
+              Positioned(
+                left: 16.0,
+                bottom: 16.0,
+                child: Card(
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  color: Theme.of(context).colorScheme.surface,
+                  child: Container(
+                    padding: const EdgeInsets.all(12.0),
+                    width: 275, // 增加宽度以适应新控件
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '新建',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: toolCardTitleSize,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 替换后的横向输入和选择控件
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // 1. 输入框
+                            Text(
+                              '@',
+                              style: TextStyle(fontSize: toolCardTextSize),
+                            ),
+                            SizedBox(
+                              width: 60,
+                              child: TextField(
+                                controller: _inputController,
+                                keyboardType: TextInputType.number,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: toolCardTextSize),
+                                decoration: const InputDecoration(
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 3,
+                                    horizontal: 3,
+                                  ),
+                                  border: UnderlineInputBorder(),
+                                ),
+                              ),
+                            ),
+
+                            // 2. 文字和下拉选项 1 (单位)
+                            Text(
+                              ' is C:op of ',
+                              style: TextStyle(fontSize: toolCardTextSize),
+                            ),
+                            SizedBox(
+                              height: 24, // 限制高度以压缩空间
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _unitValue,
+                                  isDense: true,
+                                  iconSize: 16,
+                                  style: TextStyle(
+                                    fontSize: toolCardTextSize,
+                                    color: Colors.black,
+                                  ),
+                                  items: _units.map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                          fontSize: toolCardTextSize,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _unitValue = newValue!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                            Text(
+                              ',',
+                              style: TextStyle(fontSize: toolCardTextSize),
+                            ),
+                            SizedBox(
+                              height: 24,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _modeValue,
+                                  isDense: true,
+                                  iconSize: 16,
+                                  style: TextStyle(
+                                    fontSize: toolCardTextSize,
+                                    color: Colors.black,
+                                  ),
+                                  items: _modes.map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: TextStyle(
+                                          fontSize: toolCardTextSize,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      _modeValue = newValue!;
+                                    });
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // 结束替换
+                        const SizedBox(height: 4),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            OutlinedButton(onPressed: () {}, child: Text('取消')),
+                            SizedBox(width: 4),
+                            ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.primary,
+                              ),
+                              child: Text(
+                                '确定',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  //fontSize: toolCardTextSize,
+                                  color: Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),

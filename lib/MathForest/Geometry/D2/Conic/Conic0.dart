@@ -5,9 +5,8 @@ import '../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../Fertile/DPoint.dart';
 import '../Fertile/QPoint.dart';
-//import 'HLine.dart';
-//import 'XLine.dart';
-//import 'Conic.dart';
+import 'HLine.dart';
+import 'XLine.dart';
 
 
 import '../Linear/Vector.dart';
@@ -149,69 +148,64 @@ class Conic0 {
       num t = t0;
       num k = -0.5; // 初始学习率
       num prevDistance = double.infinity;
-
       for (var i = 0; i < maxIterations; i++) {
         // 计算梯度（距离平方的导数）
         num gradient = derDisP2P(P, t);
-
         // 收敛检测
         if (gradient.abs() < tolerance) break;
-
         // 更新参数
         t += k * gradient;
-
         // 规范化角度到 [0, 2π)
         t = t % (2 * pi);
         if (t < 0) t += 2 * pi;
-
         // 计算当前距离
         num currentDistance = disP2P(P, t);
-
         // 检查距离变化
         if ((prevDistance - currentDistance).abs() < tolerance) break;
         prevDistance = currentDistance;
-
         // 衰减学习率
         k *= 0.85; // 每次衰减15%
       }
       return t;
     }
-
     // 初始点：覆盖一个周期 [0, 2π)
     List<num> initialThetas = [];
     for (int i = 0; i < 12; i++) {
       initialThetas.add(i * pi / 6); // 每30°一个点
     }
-
     // 优化每个初始点并找到最佳结果
     num bestTheta = initialThetas[0];
     num minDistance = double.infinity;
-
     for (num t0 in initialThetas) {
       num theta = optimizeFrom(t0);
       num distance = disP2P(P, theta);
-
       if (distance < minDistance) {
         minDistance = distance;
         bestTheta = theta;
       }
     }
-
     return bestTheta;
   }
 
-  Vector pClosestP2P(Vector P){
+  Vector closestP(Vector P){
     return indexPoint(thetaClosestP2P(P));
   }
 
-  num disClosestP2P(Vector P){
-    return P.dis(pClosestP2P(P));
-  }
-
   num disP(Vector P){
-    return disClosestP2P(P);
+    return P.dis(closestP(P));
   }
 
+  Vector tangentVectorByP(Vector P) {
+    return tangentVector(thetaClosestP2P(P));
+  }
+
+  Line tangentLineByP(Vector P) {
+    return tangentLine(thetaClosestP2P(P));
+  }
+
+  XLine tangentLineByDP(DPoint dP) {
+    return XLine.new2L(tangentLineByP(dP.p1), tangentLineByP(dP.p2));
+  }
 
 
   //Conic get conic => Conic().byConic0(this);

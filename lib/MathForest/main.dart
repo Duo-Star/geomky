@@ -14,6 +14,9 @@ export 'Algebra/Trunk/Fertile/TNum.dart';
 export 'Algebra/Trunk/Complex.dart';
 // 数列
 export 'Algebra/Trunk/Sequence.dart';
+// cas
+export 'Algebra/Mountain/AMlib.dart';
+export 'Algebra/Mountain/AM.dart';
 
 // 圆锥曲线
 export 'Geometry/D2/Conic/Circle.dart';

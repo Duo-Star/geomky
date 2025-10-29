@@ -20,6 +20,7 @@ String removeComments(String input) {
   String result = '';
   result = input.replaceAll(RegExp(r'``.*?``', multiLine: true, dotAll: true), '');
   result = result.replaceAll(RegExp(r'/\*.*?\*/', multiLine: true, dotAll: true), '');
+  result = result.replaceAll(RegExp(r'//.*$', multiLine: true), '');
   return result;
 }
 

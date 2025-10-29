@@ -59,7 +59,7 @@ Paint axisPaint = Paint()
   ..strokeWidth = 2.0;
 
 Paint gridPaint = Paint()
-  ..color = Color.fromARGB(80, 0, 0, 0)
+  ..color = Color.fromARGB(60, 0, 0, 0)
   ..style = PaintingStyle.stroke
   ..strokeWidth = 1.5;
 
@@ -90,16 +90,69 @@ void drawPoint(Vector p, Monxiv monxiv, {Paint? paint, double? size}) {
   monxiv.canvas.drawCircle(monxiv.c2s(p).offset, size ?? 3.5, usedPaint);
 }
 
+bool drawFramework(Monxiv monxiv) {
+  num xStart = monxiv.xStart;
+  num xEnd = monxiv.xEnd;
+  num yStart = monxiv.yStart;
+  num yEnd = monxiv.yEnd;
+  monxiv.canvas.drawColor(monxiv.bgc, BlendMode.srcOver);
+  drawSegmentBy2P(Vector(xStart, 0), Vector(xEnd, 0), monxiv, paint: axisPaint);
+  drawSegmentBy2P(Vector(0, yStart), Vector(0, yEnd), monxiv, paint: axisPaint);
+  int drawX = xStart.floor() - 1;
+  if (drawX < 1) drawX = 1;
+  int drawX_ = xEnd.floor() + 1;
+  if (drawX_ > 100) drawX_ = 100;
+  int drawY = yStart.floor() - 1;
+  if (drawY < 1) drawY = 1;
+  int drawY_ = yEnd.floor() + 1;
+  if (drawY_ > 100) drawY_ = 100;
+  for (int x = xStart.floor(); x <= xEnd; x++) {
+    drawPoint(Vector(x), monxiv, paint: axisPaint, size: 3.0);
+    drawText(
+      "$x",
+      Vector(x) + Vector(-0.1, -0.1),
+      12,
+      500,
+      monxiv,
+      color: monxiv.axisLabelColor,
+    );
+    drawSegmentBy2P(
+      Vector(x, yEnd),
+      Vector(x, yStart),
+      monxiv,
+      paint: gridPaint,
+    );
+  }
+  for (int y = yStart.floor(); y <= yEnd; y++) {
+    drawPoint(Vector(0, y), monxiv, paint: axisPaint);
+    drawText(
+      "$y",
+      Vector(0, y) + Vector(-0.1, -0.1),
+      12,
+      500,
+      monxiv,
+      color: monxiv.axisLabelColor,
+    );
+    drawSegmentBy2P(
+      Vector(xStart, y),
+      Vector(xEnd, y),
+      monxiv,
+      paint: gridPaint,
+    );
+  }
+  return true;
+}
+
 void drawDPoint(DPoint dP, Monxiv monxiv, {Paint? paint,double? size}) {
   drawPoint(dP.p1, monxiv, paint: paint, size: size ?? 3.5);
   drawPoint(dP.p2, monxiv, paint: paint, size: size ?? 3.5);
 }
 
 void drawQPoint(QPoint qP, Monxiv monxiv, {Paint? paint}) {
-  drawPoint(qP.p1, monxiv, paint: defaultQPointPaint);
-  drawPoint(qP.p2, monxiv, paint: defaultQPointPaint);
-  drawPoint(qP.p3, monxiv, paint: defaultQPointPaint);
-  drawPoint(qP.p4, monxiv, paint: defaultQPointPaint);
+  drawPoint(qP.p1, monxiv, paint: paint??defaultQPointPaint);
+  drawPoint(qP.p2, monxiv, paint: paint??defaultQPointPaint);
+  drawPoint(qP.p3, monxiv, paint: paint??defaultQPointPaint);
+  drawPoint(qP.p4, monxiv, paint: paint??defaultQPointPaint);
 }
 
 void drawDots(Dots ds, Monxiv monxiv, {Paint? paint}) {
@@ -213,4 +266,19 @@ void drawT2PFunction(Function f, Monxiv monxiv, {Paint? paint, num? from, num? t
   monxiv.canvas.drawPath(p, usedPaint);
 }
 
+
+
+void drawDottedLine(Line l, Monxiv monxiv, {Paint? paint}) {
+  final Paint usedPaint = paint ?? defaultLinePaint;
+  if (monxiv.lam>30) {
+    for (num t = -30; t <= 31; t += 1/monxiv.lam) {
+      Vector p = l.p + l.v.unit * t;
+      drawPoint(p, monxiv, paint: usedPaint, size: 1.0);
+    }
+  } else {
+    drawLine(l, monxiv,paint: usedPaint);
+  }
+
+
+}
 

@@ -74,19 +74,22 @@ class Monxiv {
     canvas = c;
   }
 
-  Color bgc = Color.fromARGB(200, 230, 230, 230);
+  Color bgc = Color.fromARGB(255, 255, 255, 255);
   Color axisLabelColor = Colors.black54;
 
+  // 坐标系坐标转屏幕坐标
   Vector c2s(Vector c) {
     return Vector(c.x * lam + p.x, -c.y * lam + p.y);
   }
 
+  // 屏幕坐标转坐标系坐标
   Vector s2c(Vector s) {
     return Vector((s.x - p.x) / lam, -(s.y - p.y) / lam);
   }
 
+  // 重置视图
   void reset([Vector? v]) {
-    p = v ?? Vector(150, 150);
+    p = Vector(size.x * .12, size.y * .85);
     lam = 100;
   }
 
@@ -123,9 +126,9 @@ class Monxiv {
     print('handleScaleUpdate');
     if (details.scale != 1.0) {
       // 缩放
-      double newScale = _startMonxivLam * details.scale;
+      //double newScale = _startMonxivLam * details.scale;
       // 缩放范围
-      lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
+      //lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
     } else if (details.localFocalPoint != _startLocalPosition.offset) {
       // 平移
       Vector sp = Vector(
@@ -170,9 +173,22 @@ class Monxiv {
   void handlePointerSignal(PointerSignalEvent event) {
     if (event is PointerScrollEvent) {
       print('滚轮缩放');
-      double zoomFactor = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
-      double newScale = lam * zoomFactor;
-      lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
+      // 获取鼠标指针的屏幕坐标
+      Vector pointerScreenPos = Vector(event.position.dx, event.position.dy);
+      // 转换为世界坐标
+      Vector pointerWorldPos = s2c(pointerScreenPos);
+
+      // 计算缩放因子
+      num zoomFactor = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
+      num newLam = lam * zoomFactor;
+      newLam = newLam.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
+
+      // 调整 p，使得 pointerWorldPos 的屏幕坐标不变
+      p.x = pointerScreenPos.x - pointerWorldPos.x * newLam;
+      p.y = pointerScreenPos.y + pointerWorldPos.y * newLam;
+
+      // 更新缩放因子
+      lam = newLam;
     }
   }
 
@@ -202,7 +218,7 @@ class Monxiv {
   }
 
   String select(tcp) {
-    num maxDx = size.len / 110;
+    num maxDx = size.len / 100;
     num dx = 1e5; //spx
     num ldx = dx;
     String lb = '';
@@ -220,6 +236,8 @@ class Monxiv {
           dx = 3 + gObj.obj.disP(tcp) * lam;
         case const ('Conic0'):
           dx = 5 + gObj.obj.disP(tcp) * lam;
+        case const ('XLine'):
+          dx = 3 + gObj.obj.disP(tcp) * lam;
       }
       if (dx < maxDx && dx < ldx) {
         ldx = dx;
@@ -231,9 +249,12 @@ class Monxiv {
 
   bool draw() {
     //drawText('drawGMKData - error', c2s(Vector(10,10)), 12, 500, canvas);
+    drawFramework(this);
     if (gmkData.count != 0) {
       for (var key in gmkData.data.keys) {
         switch (gmkData.data[key]?.type) {
+          //
+          // 画点
           case const ("Vector"):
             if (gmkData.data[key]!.style.show) {
               Vector p = gmkData.data[key]?.obj;
@@ -253,6 +274,8 @@ class Monxiv {
                 drawText('Point: $key', p, 12, 500, this);
               }
             }
+          //
+          //
           case const ("DPoint"):
             if (gmkData.data[key]!.style.show) {
               DPoint dp = gmkData.data[key]?.obj;
@@ -275,35 +298,64 @@ class Monxiv {
               if (fertileWaveLink) {
                 Vector v = (dp.p1 - dp.p2);
                 Vector u = v.roll90();
-                num time = gmkData.data['time']?.obj??0;
+                num time = gmkData.data['time']?.obj ?? 0;
                 Vector wave(t) {
-                  num h = -1.0*t*(t-1);
-                  return u * (sin(10.0*t*v.len+2.5*time)*0.16*h) + v * t + dp.p2;
+                  num h = -1.0 * t * (t - 1);
+                  return u * (sin(10.0 * t * v.len + 2.5 * time) * 0.16 * h) +
+                      v * t +
+                      dp.p2;
                 }
-                drawT2PFunction(wave, this, from: 0, to: 1, dt: 0.02/v.len, paint: paint);
+
+                drawT2PFunction(
+                  wave,
+                  this,
+                  from: 0,
+                  to: 1,
+                  dt: 0.02 / v.len,
+                  paint: paint,
+                );
                 if (fertileWaveLinkSelect) {
-                  drawT2PFunction(wave, this, from: 0, to: 1, dt: 0.02/v.len, paint: Paint()
-                    ..color = gmkData.data[key]!.style.color.withAlpha(80)
-                    ..style = PaintingStyle.stroke
-                    ..strokeWidth = 10.0 * gmkData.data[key]!.style.size);
+                  drawT2PFunction(
+                    wave,
+                    this,
+                    from: 0,
+                    to: 1,
+                    dt: 0.02 / v.len,
+                    paint: Paint()
+                      ..color = gmkData.data[key]!.style.color.withAlpha(80)
+                      ..style = PaintingStyle.stroke
+                      ..strokeWidth = 10.0 * gmkData.data[key]!.style.size,
+                  );
                 }
               }
               if (gmkData.data[key]!.style.labelShow) {
                 drawText('DPoint: $key', p, 12, 500, this);
               }
             }
+          //
+          //
           case const ("QPoint"):
-            QPoint qp = gmkData.data[key]?.obj;
-            drawQPoint(qp, this);
-            if (gmkData.data[key]!.style.labelShow) {
-              drawText('QPoint: $key', qp.p1, 12, 500, this);
+            if (gmkData.data[key]!.style.show) {
+              Paint paint = Paint()
+                ..color = gmkData.data[key]!.style.color
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 2.5 * gmkData.data[key]!.style.size;
+              QPoint qp = gmkData.data[key]?.obj;
+              drawQPoint(qp, this, paint: paint);
+              if (gmkData.data[key]!.style.labelShow) {
+                drawText('QPoint: $key', qp.p1, 12, 500, this);
+              }
             }
+          //
+          //
           case const ("num"):
-            Vector p = Vector(gmkData.data[key]?.obj);
-            drawPoint(p, this);
+            //Vector p = Vector(gmkData.data[key]?.obj);
+            //drawPoint(p, this);
             if (gmkData.data[key]!.style.labelShow) {
               drawText('N: $key', p, 12, 500, this);
             }
+          //
+          //
           case const ("Circle"):
             Circle circle = gmkData.data[key]?.obj;
             Paint paint = Paint()
@@ -319,25 +371,45 @@ class Monxiv {
               drawCircle(circle, this, paint: sPaint);
             }
             if (gmkData.data[key]!.style.labelShow) {
-              drawText('Circle: $key', circle.p, 12, 500, this);
+              drawText(
+                'Circle: $key',
+                circle.indexPoint(key.hashCode),
+                12,
+                500,
+                this,
+              );
             }
+          //
+          //
           case const ("Line"):
             Line l = gmkData.data[key]?.obj;
             Paint paint = Paint()
               ..color = gmkData.data[key]!.style.color
-              ..style = PaintingStyle.fill
+              ..style = PaintingStyle.stroke
               ..strokeWidth = 2.5 * gmkData.data[key]!.style.size;
-            drawLine(l, this, paint: paint);
+            if (gmkData.data[key]!.style.shape == 'dotted') {
+              drawDottedLine(l, this, paint: paint);
+            } else {
+              drawLine(l, this, paint: paint);
+            }
             if (selectLabel == gmkData.data[key]?.label) {
               Paint sPaint = Paint()
                 ..color = gmkData.data[key]!.style.color.withAlpha(88)
-                ..style = PaintingStyle.fill
+                ..style = PaintingStyle.stroke
                 ..strokeWidth = 9.0 * gmkData.data[key]!.style.size;
               drawLine(l, this, paint: sPaint);
             }
             if (gmkData.data[key]!.style.labelShow) {
-              drawText('Line: $key', l.p, 12, 500, this);
+              drawText(
+                'Line: $key',
+                l.indexPoint(6.66 * sin(key.hashCode)),
+                12,
+                500,
+                this,
+              );
             }
+          //
+          //
           case const ("Conic0"):
             Conic0 c0 = gmkData.data[key]?.obj;
             Paint paint = Paint()
@@ -349,12 +421,41 @@ class Monxiv {
               Paint sPaint = Paint()
                 ..color = gmkData.data[key]!.style.color.withAlpha(88)
                 ..style = PaintingStyle.stroke
-                ..strokeWidth = 9.0 * gmkData.data[key]!.style.size;
+                ..strokeWidth = 10.0 * gmkData.data[key]!.style.size;
               drawConic0(c0, this, paint: sPaint);
             }
             if (gmkData.data[key]!.style.labelShow) {
-              drawText('Conic0: $key', c0.p, 12, 500, this);
+              drawText(
+                'Conic0: $key',
+                c0.indexPoint(key.hashCode),
+                12,
+                500,
+                this,
+              );
             }
+          //
+          //
+          case const ("XLine"):
+            XLine xl = gmkData.data[key]?.obj;
+            Paint paint = Paint()
+              ..color = gmkData.data[key]!.style.color
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 2.5 * gmkData.data[key]!.style.size;
+            drawLine(xl.l1, this, paint: paint);
+            drawLine(xl.l2, this, paint: paint);
+            if (selectLabel == gmkData.data[key]?.label) {
+              Paint sPaint = Paint()
+                ..color = gmkData.data[key]!.style.color.withAlpha(88)
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = 9.0 * gmkData.data[key]!.style.size;
+              drawLine(xl.l1, this, paint: sPaint);
+              drawLine(xl.l2, this, paint: sPaint);
+            }
+            if (gmkData.data[key]!.style.labelShow) {
+              drawText('XLine: $key', xl.p, 12, 500, this);
+            }
+          //
+          //
           case const ('Polygon'):
             Polygon polygon = gmkData.data[key]?.obj;
             Paint paint = Paint()
@@ -377,55 +478,6 @@ class Monxiv {
           // drawText('error: $key', Vector(0, 0), 12, 500, canvas);
         }
       }
-    }
-    return true;
-  }
-
-  bool drawFramework() {
-    canvas.drawColor(bgc, BlendMode.srcOver);
-    drawSegmentBy2P(Vector(xStart, 0), Vector(xEnd, 0), this, paint: axisPaint);
-    drawSegmentBy2P(Vector(0, yStart), Vector(0, yEnd), this, paint: axisPaint);
-    int drawX = xStart.floor() - 1;
-    if (drawX < 1) drawX = 1;
-    int drawX_ = xEnd.floor() + 1;
-    if (drawX_ > 100) drawX_ = 100;
-    int drawY = yStart.floor() - 1;
-    if (drawY < 1) drawY = 1;
-    int drawY_ = yEnd.floor() + 1;
-    if (drawY_ > 100) drawY_ = 100;
-    for (int x = xStart.floor(); x <= xEnd; x++) {
-      drawPoint(Vector(x), this, paint: axisPaint, size: 3.0);
-      drawText(
-        "$x",
-        Vector(x) + Vector(-0.1, -0.1),
-        12,
-        500,
-        this,
-        color: axisLabelColor,
-      );
-      drawSegmentBy2P(
-        Vector(x, yEnd),
-        Vector(x, yStart),
-        this,
-        paint: gridPaint,
-      );
-    }
-    for (int y = yStart.floor(); y <= yEnd; y++) {
-      drawPoint(Vector(0, y), this, paint: axisPaint);
-      drawText(
-        "$y",
-        Vector(0, y) + Vector(-0.1, -0.1),
-        12,
-        500,
-        this,
-        color: axisLabelColor,
-      );
-      drawSegmentBy2P(
-        Vector(xStart, y),
-        Vector(xEnd, y),
-        this,
-        paint: gridPaint,
-      );
     }
     return true;
   }

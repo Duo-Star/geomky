@@ -14,6 +14,8 @@ import '../../Conic/Circle.dart';
 import '../../Conic/Conic0.dart';
 import '../../Conic/Conic1.dart';
 import '../../Conic/Conic2.dart';
+import '../../Conic/XLine.dart';
+import '../../Conic/HLine.dart';
 import '../../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../../../../Algebra/Trunk/Fertile/TNum.dart';
@@ -134,11 +136,6 @@ dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
       Line l2 = getVar(gmkCommand.factor[1], gmkData);
       return (l520.xLineLine(l1, l2), method2type[method]);
 
-    case const ('Ins^cc'):
-      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
-      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
-      return (other_ins_solver.xCircleCircle(c1, c2), method2type[method]);
-
     case const ('Ins^cl'):
       Circle c = getVar(gmkCommand.factor[0], gmkData);
       Line l = getVar(gmkCommand.factor[1], gmkData);
@@ -156,12 +153,32 @@ dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
       DNum dn = l520.xCircleLineTheta(c, l);
       return (c.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
 
+    case const ('Ins^cc'):
+      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
+      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
+      return (other_ins_solver.xCircleCircle(c1, c2), method2type[method]);
+
     case const ('Ins^cc_index'):
       Circle c1 = getVar(gmkCommand.factor[0], gmkData);
       Circle c2 = getVar(gmkCommand.factor[1], gmkData);
       int index = getVar(gmkCommand.factor[2], gmkData);
       DNum dn = other_ins_solver.xCircleCircleTheta(c1, c2);
       return (c2.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
+
+    case const ('Ins^lc0'):
+      Line l = getVar(gmkCommand.factor[0], gmkData);
+      Conic0 c0 = getVar(gmkCommand.factor[1], gmkData);
+      return (l520.xConic0Line(c0, l), method2type[method]);
+
+    case const ('Ins^c0l'):
+      Conic0 c0 = getVar(gmkCommand.factor[0], gmkData);
+      Line l = getVar(gmkCommand.factor[1], gmkData);
+      return (l520.xConic0Line(c0, l), method2type[method]);
+
+    case const ('Tan^c0dp'):
+      Conic0 c0 = getVar(gmkCommand.factor[0], gmkData);
+      DPoint dp = getVar(gmkCommand.factor[1], gmkData);
+      return (c0.tangentLineByDP(dp), method2type[method]);
 
     case 'L':
       Vector p1 = getVar(gmkCommand.factor[0], gmkData);
@@ -220,6 +237,23 @@ dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
       int index = getVar(gmkCommand.factor[1], gmkData);
       return ((index == 1) ? dp.p1 : dp.p2, method2type[method]);
 
+    case const ('QP'):
+      DPoint dp1 = getVar(gmkCommand.factor[0], gmkData);
+      DPoint dp2 = getVar(gmkCommand.factor[1], gmkData);
+      return (QPoint.new2DP(dp1, dp2), method2type[method]);
+
+    case const ('QP^xl1'):
+      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
+      return (qp.xl1, method2type[method]);
+
+    case const ('QP^xl2'):
+      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
+      return (qp.xl2, method2type[method]);
+
+    case const ('XL^p'):
+      XLine xl = getVar(gmkCommand.factor[0], gmkData);
+      return (xl.p, method2type[method]);
+
     case 'C0':
       Vector p0 = getVar(gmkCommand.factor[0], gmkData);
       Vector p1 = getVar(gmkCommand.factor[1], gmkData);
@@ -260,6 +294,9 @@ Map<String, String> method2type = {
   'L:pv': 'Line',
   'Ins^ll': 'Vector',
   'Ins^cl_index': 'Vector',
+  'Ins^c0l': 'DPoint',
+  'Ins^lc0': 'DPoint',
+  'Tan^c0dp': 'XLine',
   'C': 'Circle',
   'C:op': 'Circle',
   'Ins^cc': 'DPoint',
@@ -273,6 +310,10 @@ Map<String, String> method2type = {
   'QP^deriveL': 'Line',
   'QP^heart': 'Vector',
   'DP^l': 'Line',
+  'QP': 'QPoint',
+  'QP^xl1': 'XLine',
+  'QP^xl2': 'XLine',
+  'XL^p': 'Vector',
   'C0': 'Conic0',
   'Poly': 'Polygon',
 };

@@ -22,6 +22,8 @@ class QPoint {
   //构建
   QPoint(this.p1, this.p2, this.p3, this.p4);
 
+  static new2DP(DPoint dp1, DPoint dp2) => QPoint(dp1.p1, dp2.p1, dp1.p2, dp2.p2);
+
   //分对成为两个骈点
   DPoint get dP1 => DPoint(p1, p3);
   DPoint get dP2 => DPoint(p2, p4);
@@ -38,6 +40,11 @@ class QPoint {
   Line get l14 => Line.new2P(p1, p4);
   Line get l32 => Line.new2P(p3, p2);
   Line get l34 => Line.new2P(p3, p4);
+
+  // 两种连接
+  XLine get xl1 => XLine.new2L(l14, l32);
+  XLine get xl2 => XLine.new2L(l12, l34);
+
 
   //衍骈点
   DPoint get deriveDP => DPoint(l520.xLineLine(l14, l32), l520.xLineLine(l12, l34));
