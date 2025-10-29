@@ -305,15 +305,7 @@ class Monxiv {
                       v * t +
                       dp.p2;
                 }
-
-                drawT2PFunction(
-                  wave,
-                  this,
-                  from: 0,
-                  to: 1,
-                  dt: 0.02 / v.len,
-                  paint: paint,
-                );
+                drawT2PFunction(wave, this, from: 0, to: 1, dt: .02 / v.len, paint: paint);
                 if (fertileWaveLinkSelect) {
                   drawT2PFunction(
                     wave,
@@ -402,7 +394,7 @@ class Monxiv {
             if (gmkData.data[key]!.style.labelShow) {
               drawText(
                 'Line: $key',
-                l.indexPoint(6.66 * sin(key.hashCode)),
+                l.indexPoint(sin(key.hashCode)),
                 12,
                 500,
                 this,

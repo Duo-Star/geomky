@@ -2,10 +2,12 @@ library;
 
 import 'dart:math' as math;
 
+//求交算法库
 import '../../../../Algebra/Functions/Main.dart' as funcs;
 import '../../Intersection/Line520.dart' as l520;
 import '../../Intersection/Other2DInsSolver.dart' as other_ins_solver;
 
+//几何对象
 import '../../Linear/Vector.dart';
 import '../../Linear/Polygon.dart';
 import '../../Linear/Line.dart';
@@ -32,11 +34,10 @@ import 'GMKStructure.dart';
 import 'GMKCommand.dart';
 // 编译器
 import 'GMKCompiler.dart' as compiler;
-// 方法集合
-import 'GMKLib.dart' as lib;
 // 几何对象
 import '../Monxiv/GraphOBJ.dart';
 
+//返回值，预制值或标签索引
 dynamic getVar(dynamic itemFactor, gmkData) {
   if (itemFactor.runtimeType == String) {
     String label = compiler.subStringBetween(itemFactor, '<', '>');
@@ -46,6 +47,7 @@ dynamic getVar(dynamic itemFactor, gmkData) {
   }
 }
 
+//返回完整值列表
 List<dynamic> getVarList(List<dynamic> factorList, gmkData) {
   List<dynamic> result = [];
   for (var item in factorList) {
@@ -54,284 +56,395 @@ List<dynamic> getVarList(List<dynamic> factorList, gmkData) {
   return result;
 }
 
+//解析单条指令
 dynamic analysis(GMKCommand gmkCommand, GMKData gmkData) {
   String method = gmkCommand.method;
-  switch (method) {
-    case 'N':
-      return (getVar(gmkCommand.factor[0], gmkData), method2type[method]);
-
-    case 'N^add':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1 + n2, method2type[method]);
-
-    case 'N^sub':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1 - n2, method2type[method]);
-
-    case 'N^ops':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (-n1, method2type[method]);
-
-    case 'N^mul':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1 * n2, method2type[method]);
-
-    case 'N^div':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (n1 / n2, method2type[method]);
-
-    case 'N^sin':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.sin(n1), method2type[method]);
-
-    case 'N^cos':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.cos(n1), method2type[method]);
-
-    case 'N^tan':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (math.tan(n1), method2type[method]);
-
-    case 'N^abs':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (funcs.sin(n1), method2type[method]);
-
-    case 'N^sgn':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      return (funcs.sgn(n1), method2type[method]);
-
-    case 'DN':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      return (DNum(n1, n2), method2type[method]);
-
-    case 'TN':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      num n3 = getVar(gmkCommand.factor[2], gmkData);
-      return (TNum(n1, n2, n3), method2type[method]);
-
-    case 'QN':
-      num n1 = getVar(gmkCommand.factor[0], gmkData);
-      num n2 = getVar(gmkCommand.factor[1], gmkData);
-      num n3 = getVar(gmkCommand.factor[2], gmkData);
-      num n4 = getVar(gmkCommand.factor[3], gmkData);
-      return (QNum(n1, n2, n3, n4), method2type[method]);
-
-    case 'P':
-      num x = getVar(gmkCommand.factor[0], gmkData);
-      num y = getVar(gmkCommand.factor[1], gmkData);
-      return (Vector(x, y), method2type[method]);
-
-    case 'P:v':
-      Vector p = getVar(gmkCommand.factor[0], gmkData);
-      return (p, method2type[method]);
-
-    case 'Ins^ll':
-      Line l1 = getVar(gmkCommand.factor[0], gmkData);
-      Line l2 = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xLineLine(l1, l2), method2type[method]);
-
-    case const ('Ins^cl'):
-      Circle c = getVar(gmkCommand.factor[0], gmkData);
-      Line l = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xCircleLine(c, l), method2type[method]);
-
-    case const ('Ins^lc'):
-      Line l = getVar(gmkCommand.factor[0], gmkData);
-      Circle c = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xCircleLine(c, l), method2type[method]);
-
-    case const ('Ins^cl_index'):
-      Circle c = getVar(gmkCommand.factor[0], gmkData);
-      Line l = getVar(gmkCommand.factor[1], gmkData);
-      int index = getVar(gmkCommand.factor[2], gmkData);
-      DNum dn = l520.xCircleLineTheta(c, l);
-      return (c.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
-
-    case const ('Ins^cc'):
-      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
-      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
-      return (other_ins_solver.xCircleCircle(c1, c2), method2type[method]);
-
-    case const ('Ins^cc_index'):
-      Circle c1 = getVar(gmkCommand.factor[0], gmkData);
-      Circle c2 = getVar(gmkCommand.factor[1], gmkData);
-      int index = getVar(gmkCommand.factor[2], gmkData);
-      DNum dn = other_ins_solver.xCircleCircleTheta(c1, c2);
-      return (c2.indexPoint((index == 1) ? dn.min : dn.max), method2type[method]);
-
-    case const ('Ins^lc0'):
-      Line l = getVar(gmkCommand.factor[0], gmkData);
-      Conic0 c0 = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xConic0Line(c0, l), method2type[method]);
-
-    case const ('Ins^c0l'):
-      Conic0 c0 = getVar(gmkCommand.factor[0], gmkData);
-      Line l = getVar(gmkCommand.factor[1], gmkData);
-      return (l520.xConic0Line(c0, l), method2type[method]);
-
-    case const ('Tan^c0dp'):
-      Conic0 c0 = getVar(gmkCommand.factor[0], gmkData);
-      DPoint dp = getVar(gmkCommand.factor[1], gmkData);
-      return (c0.tangentLineByDP(dp), method2type[method]);
-
-    case 'L':
-      Vector p1 = getVar(gmkCommand.factor[0], gmkData);
-      Vector p2 = getVar(gmkCommand.factor[1], gmkData);
-      return (Line.new2P(p1, p2), method2type[method]);
-
-    case 'L:pv':
-      Vector p = getVar(gmkCommand.factor[0], gmkData);
-      Vector v = getVar(gmkCommand.factor[1], gmkData);
-      return (Line(p, v), method2type[method]);
-
-    case 'C':
-      Vector p = getVar(gmkCommand.factor[0], gmkData);
-      num r = getVar(gmkCommand.factor[1], gmkData);
-      return (Circle(p, r), method2type[method]);
-
-    case 'C:op':
-      Vector o = getVar(gmkCommand.factor[0], gmkData);
-      Vector p = getVar(gmkCommand.factor[1], gmkData);
-      return (Circle.new2P(o, p), method2type[method]);
-
-    case 'P^mid':
-      Vector p1 = getVar(gmkCommand.factor[0], gmkData);
-      Vector p2 = getVar(gmkCommand.factor[1], gmkData);
-      return (p1.mid(p2), method2type[method]);
-
-    case 'IndexP':
-      dynamic obj = getVar(gmkCommand.factor[0], gmkData);
-      num index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexPoint(index), method2type[method]);
-
-    case 'IndexDP':
-      dynamic obj = getVar(gmkCommand.factor[0], gmkData);
-      DNum index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexDPoint(index), method2type[method]);
-
-    case 'IndexQP':
-      dynamic obj = getVar(gmkCommand.factor[0], gmkData);
-      QNum index = getVar(gmkCommand.factor[1], gmkData);
-      return (obj.indexQPoint(index), method2type[method]);
-
-    case 'QP^deriveL':
-      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.deriveL, method2type[method]);
-
-    case 'QP^heart':
-      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.heart, method2type[method]);
-
-    case const ('DP^l'):
-      DPoint dp = getVar(gmkCommand.factor[0], gmkData);
-      return (dp.l, method2type[method]);
-
-    case const ('DP^index'):
-      DPoint dp = getVar(gmkCommand.factor[0], gmkData);
-      int index = getVar(gmkCommand.factor[1], gmkData);
-      return ((index == 1) ? dp.p1 : dp.p2, method2type[method]);
-
-    case const ('QP'):
-      DPoint dp1 = getVar(gmkCommand.factor[0], gmkData);
-      DPoint dp2 = getVar(gmkCommand.factor[1], gmkData);
-      return (QPoint.new2DP(dp1, dp2), method2type[method]);
-
-    case const ('QP^xl1'):
-      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.xl1, method2type[method]);
-
-    case const ('QP^xl2'):
-      QPoint qp = getVar(gmkCommand.factor[0], gmkData);
-      return (qp.xl2, method2type[method]);
-
-    case const ('XL^p'):
-      XLine xl = getVar(gmkCommand.factor[0], gmkData);
-      return (xl.p, method2type[method]);
-
-    case 'C0':
-      Vector p0 = getVar(gmkCommand.factor[0], gmkData);
-      Vector p1 = getVar(gmkCommand.factor[1], gmkData);
-      Vector p2 = getVar(gmkCommand.factor[2], gmkData);
-      return (Conic0(p0, p1 - p0, p2 - p0), method2type[method]);
-
-    case const ('Poly'):
-      List ds = getVarList(gmkCommand.factor, gmkData);
-      for (var key in ds) {
-        // print(key.toString());
-      }
-      return (Polygon(ds.cast<Vector>()), method2type[method]);
-
-    default:
-      return (null, 'e-findMethod:none');
+  List? libR = lib[method];
+  if (libR != null) {
+    return (libR[1](gmkCommand.factor, gmkData), libR[0]);
   }
+  return (null, '???');
 }
 
-Map<String, String> method2type = {
-  'N': 'num',
-  'N^add': 'num',
-  'N^sub': 'num',
-  'N^ops': 'num',
-  'N^mul': 'num',
-  'N^div': 'num',
-  'N^sin': 'num',
-  'N^cos': 'num',
-  'N^tan': 'num',
-  'N^abs': 'num',
-  'N^sgn': 'num',
-  'DN': 'DNum',
-  'TN': 'TNum',
-  'QN': 'QNum',
-  'P': 'Vector',
-  'P:v': 'Vector',
-  'P^mid': 'Vector',
-  'L': 'Line',
-  'L:pv': 'Line',
-  'Ins^ll': 'Vector',
-  'Ins^cl_index': 'Vector',
-  'Ins^c0l': 'DPoint',
-  'Ins^lc0': 'DPoint',
-  'Tan^c0dp': 'XLine',
-  'C': 'Circle',
-  'C:op': 'Circle',
-  'Ins^cc': 'DPoint',
-  'Ins^lc': 'DPoint',
-  'Ins^cl': 'DPoint',
-  'Ins^cc_index': 'Vector',
-  'IndexP': 'Vector',
-  'IndexDP': 'DPoint',
-  'IndexQP': 'QPoint',
-  'DP^index': 'Vector',
-  'QP^deriveL': 'Line',
-  'QP^heart': 'Vector',
-  'DP^l': 'Line',
-  'QP': 'QPoint',
-  'QP^xl1': 'XLine',
-  'QP^xl2': 'XLine',
-  'XL^p': 'Vector',
-  'C0': 'Conic0',
-  'Poly': 'Polygon',
+//接口库
+Map<String, List<dynamic>> lib = {
+  'N': [
+    //数字
+    'num',
+    (factor, data) {
+      return getVar(factor[0], data);
+    },
+  ],
+  'N^add': [
+    //数字相加
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      return n1 + n2;
+    },
+  ],
+  'N^sub': [
+    //数字相减
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      return n1 - n2;
+    },
+  ],
+  'N^ops': [
+    //数字取反
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return -n1;
+    },
+  ],
+  'N^mul': [
+    //数字取反
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      return n1 * n2;
+    },
+  ],
+  'N^div': [
+    //数字相除
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      return n1 / n2;
+    },
+  ],
+  'N^sin': [
+    //数字正弦
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return math.sin(n1);
+    },
+  ],
+  'N^cos': [
+    //数字余弦
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return math.cos(n1);
+    },
+  ],
+  'N^tan': [
+    //数字正切
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return math.tan(n1);
+    },
+  ],
+  'N^abs': [
+    //数字绝对值
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return funcs.sin(n1);
+    },
+  ],
+  'N^sgn': [
+    //数字符号归一
+    'num',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      return funcs.sgn(n1);
+    },
+  ],
+  'DN': [
+    //駢数
+    'DNum',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      return DNum(n1, n2);
+    },
+  ],
+  'TN': [
+    //汆数
+    'TNum',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      num n3 = getVar(factor[2], data);
+      return TNum(n1, n2, n3);
+    },
+  ],
+  'QN': [
+    //合数
+    'QNum',
+    (factor, data) {
+      num n1 = getVar(factor[0], data);
+      num n2 = getVar(factor[1], data);
+      num n3 = getVar(factor[2], data);
+      num n4 = getVar(factor[3], data);
+      return QNum(n1, n2, n3, n4);
+    },
+  ],
+  'P': [
+    //点（坐标创建）
+    'Vector',
+    (factor, data) {
+      num x = getVar(factor[0], data);
+      num y = getVar(factor[1], data);
+      return Vector(x, y);
+    },
+  ],
+  'P:v': [
+    //从向量创建点
+    'Vector',
+    (factor, data) {
+      Vector p = getVar(factor[0], data);
+      return p;
+    },
+  ],
+  'P^mid': [
+    //中点
+    'Vector',
+    (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      return p1.mid(p2);
+    },
+  ],
+  'L': [
+    //直线（点向创建）
+    'Line',
+        (factor, data) {
+      Vector p = getVar(factor[0], data);
+      Vector v = getVar(factor[1], data);
+      return Line(p, v);
+    },
+  ],
+  'L:2p': [
+    //直线（两点创建）
+    'Line',
+    (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      return Line.new2P(p1, p2);
+    },
+  ],
+  'Ins^ll': [
+    //直线和直线交点
+    'Vector',
+    (factor, data) {
+      Line l1 = getVar(factor[0], data);
+      Line l2 = getVar(factor[1], data);
+      return l520.xLineLine(l1, l2);
+    },
+  ],
+  'Ins^cl_index': [
+    //圆和直线的交点（索引消骈）
+    'Vector',
+    (factor, data) {
+      Circle c = getVar(factor[0], data);
+      Line l = getVar(factor[1], data);
+      int index = getVar(factor[2], data);
+      DNum dn = l520.xCircleLineTheta(c, l);
+      return c.indexPoint((index == 1) ? dn.min : dn.max);
+    },
+  ],
+  'Ins^c0l': [
+    //椭圆和直线的交点
+    'DPoint',
+    (factor, data) {
+      Conic0 c0 = getVar(factor[0], data);
+      Line l = getVar(factor[1], data);
+      return l520.xConic0Line(c0, l);
+    },
+  ],
+  'Ins^lc0': [
+    //直线和椭圆的交点
+    'DPoint',
+    (factor, data) {
+      Line l = getVar(factor[0], data);
+      Conic0 c0 = getVar(factor[1], data);
+      return l520.xConic0Line(c0, l);
+    },
+  ],
+  'Tan^c0dp': [
+    //椭圆上骈点的切线（得到交叉直线）
+    'XLine',
+    (factor, data) {
+      Conic0 c0 = getVar(factor[0], data);
+      DPoint dp = getVar(factor[1], data);
+      return c0.tangentLineByDP(dp);
+    },
+  ],
+  'C': [
+    //圆（圆心和半径）
+    'Circle',
+    (factor, data) {
+      Vector p = getVar(factor[0], data);
+      num r = getVar(factor[1], data);
+      return Circle(p, r);
+    },
+  ],
+  'C:op': [
+    //圆（圆心和圆上一点）
+    'Circle',
+    (factor, data) {
+      Vector o = getVar(factor[0], data);
+      Vector p = getVar(factor[1], data);
+      return Circle.new2P(o, p);
+    },
+  ],
+  'Ins^cc': [
+    //两个圆的交点
+    'DPoint',
+    (factor, data) {
+      Circle c1 = getVar(factor[0], data);
+      Circle c2 = getVar(factor[1], data);
+      return other_ins_solver.xCircleCircle(c1, c2);
+    },
+  ],
+  'Ins^lc': [
+    //直线和圆的交点
+    'DPoint',
+    (factor, data) {
+      Line l = getVar(factor[0], data);
+      Circle c = getVar(factor[1], data);
+      return l520.xCircleLine(c, l);
+    },
+  ],
+  'Ins^cl': [
+    //圆和直线的交点
+    'DPoint',
+    (factor, data) {
+      Circle c = getVar(factor[0], data);
+      Line l = getVar(factor[1], data);
+      return l520.xCircleLine(c, l);
+    },
+  ],
+  'Ins^cc_index': [
+    //两个圆的交点（索引消骈）
+    'Vector',
+    (factor, data) {
+      Circle c1 = getVar(factor[0], data);
+      Circle c2 = getVar(factor[1], data);
+      int index = getVar(factor[2], data);
+      DNum dn = other_ins_solver.xCircleCircleTheta(c1, c2);
+      return c2.indexPoint((index == 1) ? dn.min : dn.max);
+    },
+  ],
+  'IndexP': [
+    //对象上取点（直线，二次对象，共生对象）
+    'Vector',
+    (factor, data) {
+      dynamic obj = getVar(factor[0], data);
+      num index = getVar(factor[1], data);
+      return obj.indexPoint(index);
+    },
+  ],
+  'IndexDP': [
+    //由駢数索引到骈点
+    'DPoint',
+    (factor, data) {
+      dynamic obj = getVar(factor[0], data);
+      DNum index = getVar(factor[1], data);
+      return obj.indexDPoint(index);
+    },
+  ],
+  'IndexQP': [
+    //由合数索引到合点
+    'QPoint',
+    (factor, data) {
+      dynamic obj = getVar(factor[0], data);
+      QNum index = getVar(factor[1], data);
+      return obj.indexQPoint(index);
+    },
+  ],
+  'DP^index': [
+    //駢点的索引
+    'Vector',
+    (factor, data) {
+      DPoint dp = getVar(factor[0], data);
+      int index = getVar(factor[1], data);
+      return (index == 1) ? dp.p1 : dp.p2;
+    },
+  ],
+  'QP^deriveL': [
+    //计算合点的衍线
+    'Line',
+    (factor, data) {
+      QPoint qp = getVar(factor[0], data);
+      return qp.deriveL;
+    },
+  ],
+  'QP^heart': [
+    //计算合点的心点
+    'Vector',
+    (factor, data) {
+      QPoint qp = getVar(factor[0], data);
+      return qp.heart;
+    },
+  ],
+  'DP^l': [
+    //连接骈点
+    'Line',
+    (factor, data) {
+      DPoint dp = getVar(factor[0], data);
+      return dp.l;
+    },
+  ],
+  'QP': [
+    //创建合点
+    'QPoint',
+    (factor, data) {
+      DPoint dp1 = getVar(factor[0], data);
+      DPoint dp2 = getVar(factor[1], data);
+      return QPoint.new2DP(dp1, dp2);
+    },
+  ],
+  'QP^xl1': [
+    //合点 两种连接-1（交叉直线）
+    'XLine',
+    (factor, data) {
+      QPoint qp = getVar(factor[0], data);
+      return qp.xl1;
+    },
+  ],
+  'QP^xl2': [
+    //合点 两种连接-2（交叉直线）
+    'XLine',
+    (factor, data) {
+      QPoint qp = getVar(factor[0], data);
+      return qp.xl2;
+    },
+  ],
+  'XL^p': [
+    //计算叉线中心
+    'Vector',
+    (factor, data) {
+      XLine xl = getVar(factor[0], data);
+      return xl.p;
+    },
+  ],
+  'C0': [
+    //椭圆（中心和共轭直径）
+    'Conic0',
+    (factor, data) {
+      Vector p0 = getVar(factor[0], data);
+      Vector p1 = getVar(factor[1], data);
+      Vector p2 = getVar(factor[2], data);
+      return Conic0(p0, p1 - p0, p2 - p0);
+    },
+  ],
+  'Poly': [
+    //多边形
+    'Polygon',
+    (factor, data) {
+      List ds = getVarList(factor, data);
+      return Polygon(ds.cast<Vector>());
+    },
+  ],
 };
-
-
-
-/*
-Map<String, dynamic> doc = {
-  'P': {
-    'in_type': 'num',
-    'out_type': 'Vector',
-    'father': 'P',
-    'facNum': 2,
-    'demo': '@A is P of 1, 1;',
-  },
-  'P_byVec': {'type': 'Vector', 'facNum': 1, 'demo': '@A is P of <1, 1>;'},
-};
-void main(){
-  print(doc['P']);
-}
- */

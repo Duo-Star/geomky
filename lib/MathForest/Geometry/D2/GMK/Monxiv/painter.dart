@@ -143,16 +143,16 @@ bool drawFramework(Monxiv monxiv) {
   return true;
 }
 
-void drawDPoint(DPoint dP, Monxiv monxiv, {Paint? paint,double? size}) {
+void drawDPoint(DPoint dP, Monxiv monxiv, {Paint? paint, double? size}) {
   drawPoint(dP.p1, monxiv, paint: paint, size: size ?? 3.5);
   drawPoint(dP.p2, monxiv, paint: paint, size: size ?? 3.5);
 }
 
 void drawQPoint(QPoint qP, Monxiv monxiv, {Paint? paint}) {
-  drawPoint(qP.p1, monxiv, paint: paint??defaultQPointPaint);
-  drawPoint(qP.p2, monxiv, paint: paint??defaultQPointPaint);
-  drawPoint(qP.p3, monxiv, paint: paint??defaultQPointPaint);
-  drawPoint(qP.p4, monxiv, paint: paint??defaultQPointPaint);
+  drawPoint(qP.p1, monxiv, paint: paint ?? defaultQPointPaint);
+  drawPoint(qP.p2, monxiv, paint: paint ?? defaultQPointPaint);
+  drawPoint(qP.p3, monxiv, paint: paint ?? defaultQPointPaint);
+  drawPoint(qP.p4, monxiv, paint: paint ?? defaultQPointPaint);
 }
 
 void drawDots(Dots ds, Monxiv monxiv, {Paint? paint}) {
@@ -253,12 +253,19 @@ void drawConic2(Conic2 c2, Monxiv monxiv, {Paint? paint}) {
   monxiv.canvas.drawPath(p2, usedPaint);
 }
 
-void drawT2PFunction(Function f, Monxiv monxiv, {Paint? paint, num? from, num? to, num? dt}) {
+void drawT2PFunction(
+  Function f,
+  Monxiv monxiv, {
+  Paint? paint,
+  num? from,
+  num? to,
+  num? dt,
+}) {
   final Paint usedPaint = paint ?? defaultPaint;
   Path p = Path();
   Vector initVector = monxiv.c2s(f(0));
   p.moveTo(initVector.x.toDouble(), initVector.y.toDouble());
-  for (num theta = (from??0); theta <= (to??5.0); theta += (dt??0.1)) {
+  for (num theta = (from ?? 0); theta <= (to ?? 5.0); theta += (dt ?? 0.1)) {
     Vector nowVector = monxiv.c2s(f(theta));
     p.lineTo(nowVector.x.toDouble(), nowVector.y.toDouble());
   }
@@ -266,19 +273,10 @@ void drawT2PFunction(Function f, Monxiv monxiv, {Paint? paint, num? from, num? t
   monxiv.canvas.drawPath(p, usedPaint);
 }
 
-
-
 void drawDottedLine(Line l, Monxiv monxiv, {Paint? paint}) {
   final Paint usedPaint = paint ?? defaultLinePaint;
-  if (monxiv.lam>30) {
-    for (num t = -30; t <= 31; t += 1/monxiv.lam) {
-      Vector p = l.p + l.v.unit * t;
-      drawPoint(p, monxiv, paint: usedPaint, size: 1.0);
-    }
-  } else {
-    drawLine(l, monxiv,paint: usedPaint);
+  for (num t = -500/ monxiv.lam; t <= 1000/ monxiv.lam; t += 20 / monxiv.lam) {
+    Vector p = l.p + l.v.unit * t;
+    drawPoint(p, monxiv, paint: usedPaint, size: 1.0);
   }
-
-
 }
-

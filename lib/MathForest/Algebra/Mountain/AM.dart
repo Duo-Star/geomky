@@ -3,16 +3,23 @@ import 'dart:math' as math;
 import '../Functions/Main.dart' as funcs;
 import 'AMlib.dart' as am_lib;
 
+// Algebra Mountain
+// 代数系统
 class Am {
+  // F - 函数名
+  // factor - 因子
   String F = '-unk_function';
   List<dynamic> factor = [];
 
+  // 构造函数
   Am(this.F, this.factor);
 
+  // 新建符号
   static symbol(String s) {
     return Am("#symbol", [s]);
   }
 
+  // 新建数字
   static number(num x) {
     return Am('#num', [am_lib.decimalToFraction(x)]);
   }
@@ -28,6 +35,7 @@ class Am {
     }
     return false;
   }
+
 
   get isAtomAm {
     bool is_ = true;

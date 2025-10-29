@@ -160,7 +160,7 @@ GMKStructure goCompiler(String source) {
         List<dynamic> factor = str2Factor(extractAfter(line, ' of '));
         //
         GMKCommand cmd = GMKCommand(method, label, factor);
-        cmd.type = g_lib.method2type[method] ?? '?unType';
+        cmd.type = (g_lib.lib[method]?[0]) ?? '?unType';
         gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
         cmd.style = style;
         structure.addStep(cmd);

@@ -149,13 +149,13 @@ class _MyHomePageState extends State<MyHomePage>
 @p2 is IndexP of <c1> <n2>
 @p3 is IndexP of <c1> <n3>
 @p4 is IndexP of <c1> <n4>
-@l12 is L of <p1> <p2>
-@l34 is L of <p3> <p4>
-@l23 is L of <p2> <p3>
-@l14 is L of <p1> <p4>
+@l12 is L:2p of <p1> <p2>
+@l34 is L:2p of <p3> <p4>
+@l23 is L:2p of <p2> <p3>
+@l14 is L:2p of <p1> <p4>
 @p5 is Ins^ll of <l12> <l34>
 @p6 is Ins^ll of <l23> <l14>
-@准线 is L1 of <p5> <p6>
+@准线 is L:2p of <p5> <p6>
 @p is IndexP of <c1> 1.2
 ``
 
@@ -186,8 +186,8 @@ c2.setColor(0xffffff00)
 
 @c1 is C of .O 1
 @c2 is C of .I 1
-@xL is L of .O .I
-@yL is L of .O .J
+@xL is L:2p of .O .I
+@yL is L:2p of .O .J
 @dp1 is Ins^cc of <c1> <c2>
 @l1 is DP^l of <dp1>
 @p1 is Ins^ll of <l1> <xL>
@@ -211,7 +211,7 @@ c2.setColor(0xffffff00)
 
 @p10 is P of 1.1975308641975309 -3.1049382716049383
 @p11 is P of 6.382716049382716 -1.154320987654321
-@l2 is L of <p10> <p11>
+@l2 is L:2p of <p10> <p11>
 @p12 is P of 3.3683889650967833 -0.9297363206828225
 @p13 is P of 4.37037037037037 -2.746913580246914
 @c7 is C:op of <p12> <p13>
@@ -220,6 +220,8 @@ c2.setColor(0xffffff00)
 #dp1 fertileWaveLink
 #dp2 fertileWaveLink
 #dp3 fertileWaveLink
+
+@p14 is C^index
 
 
 /*
@@ -234,8 +236,8 @@ c2.setColor(0xffffff00)
 @G is P of 7.5 2.5
 @H is P of 7.8 2.7
 // 连接
-@f is L of <F> <G>
-@g is L of <F> <H>
+@f is L:2p of <F> <G>
+@g is L:2p of <F> <H>
 // 染色 虚线
 #f red dotted
 #g forest dotted
@@ -266,7 +268,7 @@ c2.setColor(0xffffff00)
 @Q is XL^p of <xla>
 @P is XL^p of <xlb>
 //
-@Temple is L of <Q> <P>
+@Temple is L:2p of <Q> <P>
 #Temple amber 1.5
 */
 

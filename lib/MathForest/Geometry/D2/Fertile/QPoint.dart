@@ -45,6 +45,17 @@ class QPoint {
   XLine get xl1 => XLine.new2L(l14, l32);
   XLine get xl2 => XLine.new2L(l12, l34);
 
+  //索引
+  Vector indexPoint(num i){
+    if (i==1) {
+      return p1;
+    }else if (i==2) {
+      return p2;
+    }else if (i==3) {
+      return p3;
+    }
+    return p4;
+  }
 
   //衍骈点
   DPoint get deriveDP => DPoint(l520.xLineLine(l14, l32), l520.xLineLine(l12, l34));

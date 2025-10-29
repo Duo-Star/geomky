@@ -27,6 +27,13 @@ class DPoint {
 
   Line get l => Line.new2P(p1, p2);
 
+  Vector indexPoint(num i){
+    if (i==1) {
+      return p1;
+    }
+    return p2;
+  }
+
   DNum disP(Vector p0){
     return DNum(p0.dis(p1), p0.dis(p2));
   }
