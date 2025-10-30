@@ -26,8 +26,12 @@ class Circle {
 
   Circle.new2P(Vector p1, Vector p2) : p = p1, r = (p2 - p1).len;
 
+  Circle.newDiameter(DPoint dp) : p = dp.mid, r = dp.len/2;
+
+
   num get area => pi * r * r;
   num get cir => 2 * pi * r;
+  DPoint get F => DPoint.overlap(p);
 
   Vector indexPoint(num theta) => p + Vector(r) * cos(theta) + Vector(0, r) * sin(theta);
   DPoint indexDPoint(DNum theta) => DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
@@ -37,6 +41,15 @@ class Circle {
     indexPoint(theta.n3),
     indexPoint(theta.n4),
   );
+
+  num thetaClosestP(Vector P) {
+    Vector dp = P-p;
+    return atan2(dp.y, dp.x);
+  }
+
+  Vector closestP(Vector P) {
+    return p + (P-p).unit * r;
+  }
 
   num disP(Vector p0){
     return funcs.abs((p0 - p).len - r);

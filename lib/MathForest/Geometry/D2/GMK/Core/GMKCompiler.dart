@@ -4,7 +4,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 
-import '../Monxiv/GOBJStyle.dart' as gStyle;
+import '../Monxiv/gOBJStyle.dart' as gStyle;
 
 import 'GMKCommand.dart';
 import 'GMKStructure.dart';
@@ -163,6 +163,21 @@ GMKStructure goCompiler(String source) {
         cmd.type = (g_lib.lib[method]?[0]) ?? '?unType';
         gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
         cmd.style = style;
+        structure.addStep(cmd);
+      }  catch (e, stackTrace) {
+        Exception('错误: $e');
+        Exception('堆栈跟踪: $stackTrace');
+      }
+    } else if (line.startsWith('-@')) {
+      try {
+        String label = subStringBetween(line, '@', ' is ').trim();
+        String method = subStringBetween(line, ' is ', ' of ').trim();
+        List<dynamic> factor = str2Factor(extractAfter(line, ' of '));
+        //
+        GMKCommand cmd = GMKCommand(method, label, factor);
+        cmd.type = (g_lib.lib[method]?[0]) ?? '?unType';
+        gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
+        cmd.style = style..show=false;
         structure.addStep(cmd);
       }  catch (e, stackTrace) {
         Exception('错误: $e');

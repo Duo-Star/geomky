@@ -1,5 +1,5 @@
 import 'dart:ui';
-import 'GOBJStyle.dart' as gStyle;
+import 'gOBJStyle.dart' as gStyle;
 
 class GraphOBJ {
   dynamic obj;

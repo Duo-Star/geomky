@@ -39,7 +39,7 @@ class GOBJStyle {
   bool show = true; //
   num size = 1; //
   num opacity = 0; //暧昧
-  bool labelShow = true; //
+  bool labelShow = false; //
   String shape = 'nShape'; //
   bool trace = false;
   bool fertileWaveLink = false;

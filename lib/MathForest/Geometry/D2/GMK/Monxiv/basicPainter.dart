@@ -1,16 +1,14 @@
 library;
 
+// 基本库
 import 'dart:math';
 import 'dart:ui' as ui;
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
-//
 import '../../../../Algebra/Functions/Main.dart' as funcs;
 
 //
-import 'GraphOBJ.dart';
-import 'main.dart';
+import 'graphOBJ.dart';
+import 'monxiv.dart';
 //
 import '../Core/GMKData.dart';
 import '../Core/GMKStructure.dart';
@@ -18,7 +16,7 @@ import '../Core/GMKStructure.dart';
 //
 import '../../Fertile/DPoint.dart';
 import '../../Fertile/QPoint.dart';
-//
+//圆锥曲线
 import '../../Conic/Circle.dart';
 import '../../Conic/Conic0.dart';
 import '../../Conic/Conic1.dart';
@@ -33,6 +31,8 @@ import '../../Linear/Line.dart';
 import '../../Linear/Dots.dart';
 import '../../Linear/Polygon.dart';
 
+
+//准备一些笔
 Paint defaultPaint = Paint()
   ..color = Colors.amber
   ..style = PaintingStyle.stroke
@@ -63,6 +63,8 @@ Paint gridPaint = Paint()
   ..style = PaintingStyle.stroke
   ..strokeWidth = 1.5;
 
+
+//
 void drawText(
   String str,
   Vector p,
@@ -96,49 +98,55 @@ bool drawFramework(Monxiv monxiv) {
   num yStart = monxiv.yStart;
   num yEnd = monxiv.yEnd;
   monxiv.canvas.drawColor(monxiv.bgc, BlendMode.srcOver);
-  drawSegmentBy2P(Vector(xStart, 0), Vector(xEnd, 0), monxiv, paint: axisPaint);
-  drawSegmentBy2P(Vector(0, yStart), Vector(0, yEnd), monxiv, paint: axisPaint);
-  int drawX = xStart.floor() - 1;
-  if (drawX < 1) drawX = 1;
-  int drawX_ = xEnd.floor() + 1;
-  if (drawX_ > 100) drawX_ = 100;
-  int drawY = yStart.floor() - 1;
-  if (drawY < 1) drawY = 1;
-  int drawY_ = yEnd.floor() + 1;
-  if (drawY_ > 100) drawY_ = 100;
-  for (int x = xStart.floor(); x <= xEnd; x++) {
-    drawPoint(Vector(x), monxiv, paint: axisPaint, size: 3.0);
-    drawText(
-      "$x",
-      Vector(x) + Vector(-0.1, -0.1),
-      12,
-      500,
-      monxiv,
-      color: monxiv.axisLabelColor,
-    );
+  if (monxiv.frameAxis) {
     drawSegmentBy2P(
-      Vector(x, yEnd),
-      Vector(x, yStart),
-      monxiv,
-      paint: gridPaint,
-    );
+        Vector(xStart, 0), Vector(xEnd, 0), monxiv, paint: axisPaint);
+    drawSegmentBy2P(
+        Vector(0, yStart), Vector(0, yEnd), monxiv, paint: axisPaint);
+    int drawX = xStart.floor() - 1;
+    if (drawX < 1) drawX = 1;
+    int drawX_ = xEnd.floor() + 1;
+    if (drawX_ > 100) drawX_ = 100;
+    int drawY = yStart.floor() - 1;
+    if (drawY < 1) drawY = 1;
+    int drawY_ = yEnd.floor() + 1;
+    if (drawY_ > 100) drawY_ = 100;
   }
-  for (int y = yStart.floor(); y <= yEnd; y++) {
-    drawPoint(Vector(0, y), monxiv, paint: axisPaint);
-    drawText(
-      "$y",
-      Vector(0, y) + Vector(-0.1, -0.1),
-      12,
-      500,
-      monxiv,
-      color: monxiv.axisLabelColor,
-    );
-    drawSegmentBy2P(
-      Vector(xStart, y),
-      Vector(xEnd, y),
-      monxiv,
-      paint: gridPaint,
-    );
+  if (monxiv.frameGrid) {
+    for (int x = xStart.floor(); x <= xEnd; x++) {
+      drawPoint(Vector(x), monxiv, paint: axisPaint, size: 3.0);
+      drawText(
+        "$x",
+        Vector(x) + Vector(-0.1, -0.1),
+        12,
+        500,
+        monxiv,
+        color: monxiv.axisLabelColor,
+      );
+      drawSegmentBy2P(
+        Vector(x, yEnd),
+        Vector(x, yStart),
+        monxiv,
+        paint: gridPaint,
+      );
+    }
+    for (int y = yStart.floor(); y <= yEnd; y++) {
+      drawPoint(Vector(0, y), monxiv, paint: axisPaint);
+      drawText(
+        "$y",
+        Vector(0, y) + Vector(-0.1, -0.1),
+        12,
+        500,
+        monxiv,
+        color: monxiv.axisLabelColor,
+      );
+      drawSegmentBy2P(
+        Vector(xStart, y),
+        Vector(xEnd, y),
+        monxiv,
+        paint: gridPaint,
+      );
+    }
   }
   return true;
 }
@@ -194,9 +202,6 @@ void drawLine(Line l, Monxiv monxiv, {Paint? paint}) {
   Offset p1 = monxiv.c2s(l.indexPoint(-long)).offset;
   Offset p2 = monxiv.c2s(l.indexPoint(long)).offset;
   monxiv.canvas.drawLine(p1, p2, usedPaint);
-  if (monxiv.infoMode) {
-    drawText(l.toString(), l.p, 12, 500, monxiv);
-  }
 }
 
 void drawSegmentBy2P(Vector p1_, Vector p2_, Monxiv monxiv, {Paint? paint}) {

@@ -1,6 +1,7 @@
 // Line - 平面直线类
 
 import 'dart:math' as math ;
+//import '';
 import 'Vector.dart';
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../Algebra/Trunk/Fertile/QNum.dart';
@@ -48,10 +49,20 @@ class Line {
     return p + (p0 - p).projectVec(v);
   }
 
+  Vector closestP(Vector P) => projectP(P);
+
+  num thetaClosestP(Vector P) => getPIndex(closestP(P));
+  
   num disP(Vector p0){
     return (p0-projectP(p0)).len;
   }
 
+  num getPIndex(Vector P){
+    if (v.x.abs()<1e-8){
+      return (P-p).y/v.y;
+    }
+    return (P-p).x/v.x;
+  }
 
   Vector operator [](num index) {
     return indexPoint(index);

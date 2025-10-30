@@ -2,7 +2,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
-import 'MathForest/main.dart';
+import 'MathForest/monxiv.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as GMKCompiler;
 
 

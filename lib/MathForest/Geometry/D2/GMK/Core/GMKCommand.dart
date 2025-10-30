@@ -1,4 +1,4 @@
-import '../Monxiv/GOBJStyle.dart' as gStyle;
+import '../Monxiv/gOBJStyle.dart' as gStyle;
 
 class GMKCommand {
   String method = "";

@@ -2,6 +2,7 @@
 import '../Linear/Line.dart';
 import '../Linear/Vector.dart';
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
+import '../../../Algebra/Trunk/Fertile/QNum.dart';
 
 /*
 共生双点，没有区分方法和必要
@@ -23,24 +24,35 @@ class DPoint {
     : p1 = (p ?? Vector.zero) + (v ?? Vector(1, 0)),
       p2 = (p ?? Vector.zero) - (v ?? Vector(1, 0));
 
+  DPoint.overlap(Vector p) : p1 = p, p2 = p;
+
   Vector get mid => (p1 + p2) / 2;
+
+  num get len => (p1 - p2).len;
 
   Line get l => Line.new2P(p1, p2);
 
-  Vector indexPoint(num i){
-    if (i==1) {
+  Vector indexPoint(num i) {
+    if (i == 1) {
       return p1;
     }
     return p2;
   }
 
-  DNum disP(Vector p0){
+  DNum disP(Vector p0) {
     return DNum(p0.dis(p1), p0.dis(p2));
   }
 
   static DPoint zero = DPoint(Vector.zero, Vector.zero);
   static DPoint inf = DPoint(Vector.inf, Vector.inf);
   static DPoint nan = DPoint(Vector.nan, Vector.nan);
+
+  //
+  DPoint harmonic(num t) {
+    QNum qn = QNum.harmonic(DNum(0, 1), t);
+    //return DPoint(Vector(5), Vector(6));
+    return l.indexQPoint(qn).dP2;
+  }
 
   @override
   String toString() {

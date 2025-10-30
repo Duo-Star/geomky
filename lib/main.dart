@@ -8,10 +8,11 @@ import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as gLib;
 
-import 'MathForest/Geometry/D2/GMK/Monxiv/painter.dart' as painter;
+import 'MathForest/Geometry/D2/GMK/Monxiv/basicPainter.dart' as painter;
 
 //
 import 'UI/debugLibrary.dart' as debug_library;
+import 'demoGMK.dart' as demo;
 
 void main() {
   runApp(const MyApp());
@@ -121,160 +122,11 @@ class _MyHomePageState extends State<MyHomePage>
     });
 
     // print(_gmkState.time);
-    // 加载源码
 
     try {
-      gmkCore.loadCode("""
-``@A is P of 1 1
-@x is N of .E
-@B is P of <x> .PI
-@C is P:v of <2 2>
-@D is P^mid of <C> <A>
-@n1 is N^mul of <time> .E
-@qn1 is QN of 1 2 <n1> <time>
-@c1 is C:pr of <1 1> 1
-@qp1 is IndexQP of <c1> <qn1>
-@p1 is QP^heart of <qp1>
-@l1 is QP^deriveL of <qp1>
-``
-``
-@p00 is P of 1 1
-@p01 is P of 2 1
-@n1 is N of 1
-@n2 is N of 2
-@n3 is N of 3
-@n4 is N of 5
-@c1 is C:op of <p00> <p01>
-@p1 is IndexP of <c1> <n1>
-@p2 is IndexP of <c1> <n2>
-@p3 is IndexP of <c1> <n3>
-@p4 is IndexP of <c1> <n4>
-@l12 is L:2p of <p1> <p2>
-@l34 is L:2p of <p3> <p4>
-@l23 is L:2p of <p2> <p3>
-@l14 is L:2p of <p1> <p4>
-@p5 is Ins^ll of <l12> <l34>
-@p6 is Ins^ll of <l23> <l14>
-@准线 is L:2p of <p5> <p6>
-@p is IndexP of <c1> 1.2
-``
-
-/*
-@p1 is P of 4 -1
-@p2 is P of 5 -1
-@c2 is C:op of <p1> <p2>
-@p3 is P:v of <1 1>
-
-@p4 is P of 3 4
-@p5 is P of 4 4
-@p6 is P of 2 5
-@c0_1 is C0 of <p4> <p5> <p6>
-
-#c2 red dotted 2
-#p1 indigo
-#p2 blue
-#p3 forest
-*/
-
-``
-[lua].|*
-this is a lua script
-c2 = gmk.getVar('c2')
-c2.setColor(0xffffff00)
-*|``
-
-
-@c1 is C of .O 1
-@c2 is C of .I 1
-@xL is L:2p of .O .I
-@yL is L:2p of .O .J
-@dp1 is Ins^cc of <c1> <c2>
-@l1 is DP^l of <dp1>
-@p1 is Ins^ll of <l1> <xL>
-@c3 is C:op of <p1> .J
-@p2 is Ins^cl_index of <c3> <xL> 2
-@c4 is C:op of .J <p2>
-@dp2 is Ins^cc of <c4> <c1>
-@p3 is DP^index of <dp2> 1
-@p4 is DP^index of <dp2> 2
-@c5 is C:op of <p3> .J
-@c6 is C:op of <p4> .J
-@p5 is Ins^cc_index of <c5> <c1> 1
-@p6 is Ins^cc_index of <c6> <c1> 2
-@poly1 is Poly of .J <p3> <p5> <p6> <p4>
-@p7 is P of 3 4
-@p8 is P of 4 4
-@p9 is P of 2 5
-@c0_1 is C0 of <p7> <p8> <p9>
-#poly1 amber 1.2
-#p7 labelShow
-
-@p10 is P of 1.1975308641975309 -3.1049382716049383
-@p11 is P of 6.382716049382716 -1.154320987654321
-@l2 is L:2p of <p10> <p11>
-@p12 is P of 3.3683889650967833 -0.9297363206828225
-@p13 is P of 4.37037037037037 -2.746913580246914
-@c7 is C:op of <p12> <p13>
-@dp3 is Ins^cl of <c7> <l2>
-#l2 dotted
-#dp1 fertileWaveLink
-#dp2 fertileWaveLink
-#dp3 fertileWaveLink
-
-@p14 is C^index
-
-
-/*
-// 椭圆
-@p1 is P of 5 4
-@p2 is P of 2.2 3.3
-@p3 is P of 5 2
-@c0 is C0 of <p1> <p2> <p3>
-#c0 brown
-// 准备连线
-@F is P of 8.1 1.5
-@G is P of 7.5 2.5
-@H is P of 7.8 2.7
-// 连接
-@f is L:2p of <F> <G>
-@g is L:2p of <F> <H>
-// 染色 虚线
-#f red dotted
-#g forest dotted
-// 交骈点
-@dp1 is Ins^c0l of <c0> <f>
-@dp2 is Ins^c0l of <c0> <g>
-// 保持骈点视觉连接
-#dp1 fertileWaveLink
-#dp2 fertileWaveLink
-// 骈点处切线
-@xl1 is Tan^c0dp of <c0> <dp1>
-@xl2 is Tan^c0dp of <c0> <dp2>
-// 染色
-#xl1 red
-#xl2 forest
-// 叉线中心
-@M is XL^p of <xl1>
-@N is XL^p of <xl2>
-// 使用合点
-@qp is QP of <dp1> <dp2>
-#qp hide
-//
-@xla is QP^xl1 of <qp>
-@xlb is QP^xl2 of <qp>
-#xla gray
-#xlb gray
-//
-@Q is XL^p of <xla>
-@P is XL^p of <xlb>
-//
-@Temple is L:2p of <Q> <P>
-#Temple amber 1.5
-*/
-
-""");
-
-      //print(gLib.method2type['C']);
+      // 加载源码
+      gmkCore.loadCode(demo.harmonicTest);
+      //
     } catch (e, stackTrace) {
       if (kDebugMode) {
         print('错误: $e');
@@ -350,6 +202,7 @@ c2.setColor(0xffffff00)
   // 2. 新增函数：切换卡片状态
   void _toggleCardVisibility() {
     setState(() {
+      print(gmkCore.generatedCode());
       toolCardVisible = !toolCardVisible;
     });
   }
@@ -401,8 +254,8 @@ c2.setColor(0xffffff00)
               height: tabBarH + tabPageH,
               color: Theme.of(context).colorScheme.surface,
               child: DefaultTabController(
-                initialIndex: (){
-                  return selectLabel==''?1:6;
+                initialIndex: () {
+                  return selectLabel == '' ? 1 : 6;
                 }(),
                 length: 8,
                 child: Column(
@@ -863,7 +716,9 @@ c2.setColor(0xffffff00)
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   //fontSize: toolCardTextSize,
-                                  color: Theme.of(context).colorScheme.onPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimary,
                                 ),
                               ),
                             ),

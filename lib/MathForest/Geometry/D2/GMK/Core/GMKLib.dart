@@ -35,7 +35,7 @@ import 'GMKCommand.dart';
 // 编译器
 import 'GMKCompiler.dart' as compiler;
 // 几何对象
-import '../Monxiv/GraphOBJ.dart';
+import '../Monxiv/graphOBJ.dart';
 
 //返回值，预制值或标签索引
 dynamic getVar(dynamic itemFactor, gmkData) {
@@ -189,6 +189,45 @@ Map<String, List<dynamic>> lib = {
       return QNum(n1, n2, n3, n4);
     },
   ],
+  'DP': [
+    //骈点
+    'DPoint',
+    (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      return DPoint(p1, p2);
+    },
+  ],
+  'TP': [
+    //汆点
+    'TPoint',
+    (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      Vector p3 = getVar(factor[2], data);
+      return TPoint(p1, p2, p3);
+    },
+  ],
+  'QP:4p': [
+    //合点
+    'QPoint',
+    (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      Vector p3 = getVar(factor[2], data);
+      Vector p4 = getVar(factor[3], data);
+      return QPoint(p1, p2, p3, p4);
+    },
+  ],
+  'QP': [
+    //创建合点
+    'QPoint',
+    (factor, data) {
+      DPoint dp1 = getVar(factor[0], data);
+      DPoint dp2 = getVar(factor[1], data);
+      return QPoint.new2DP(dp1, dp2);
+    },
+  ],
   'P': [
     //点（坐标创建）
     'Vector',
@@ -215,16 +254,16 @@ Map<String, List<dynamic>> lib = {
       return p1.mid(p2);
     },
   ],
-  'L': [
+  'L:pv': [
     //直线（点向创建）
     'Line',
-        (factor, data) {
+    (factor, data) {
       Vector p = getVar(factor[0], data);
       Vector v = getVar(factor[1], data);
       return Line(p, v);
     },
   ],
-  'L:2p': [
+  'L': [
     //直线（两点创建）
     'Line',
     (factor, data) {
@@ -271,33 +310,6 @@ Map<String, List<dynamic>> lib = {
       return l520.xConic0Line(c0, l);
     },
   ],
-  'Tan^c0dp': [
-    //椭圆上骈点的切线（得到交叉直线）
-    'XLine',
-    (factor, data) {
-      Conic0 c0 = getVar(factor[0], data);
-      DPoint dp = getVar(factor[1], data);
-      return c0.tangentLineByDP(dp);
-    },
-  ],
-  'C': [
-    //圆（圆心和半径）
-    'Circle',
-    (factor, data) {
-      Vector p = getVar(factor[0], data);
-      num r = getVar(factor[1], data);
-      return Circle(p, r);
-    },
-  ],
-  'C:op': [
-    //圆（圆心和圆上一点）
-    'Circle',
-    (factor, data) {
-      Vector o = getVar(factor[0], data);
-      Vector p = getVar(factor[1], data);
-      return Circle.new2P(o, p);
-    },
-  ],
   'Ins^cc': [
     //两个圆的交点
     'DPoint',
@@ -336,6 +348,50 @@ Map<String, List<dynamic>> lib = {
       return c2.indexPoint((index == 1) ? dn.min : dn.max);
     },
   ],
+  'Tan^c0dp': [
+    //椭圆上骈点的切线（得到交叉直线）
+    'XLine',
+    (factor, data) {
+      Conic0 c0 = getVar(factor[0], data);
+      DPoint dp = getVar(factor[1], data);
+      return c0.tangentLineByDP(dp);
+    },
+  ],
+  'Tan': [
+    //切线
+    'Line',
+    (factor, data) {
+      dynamic c = getVar(factor[0], data);
+      Vector p = getVar(factor[1], data);
+      return c.tangentLineByP(p);
+    },
+  ],
+  'C': [
+    //圆（圆心和半径）
+    'Circle',
+    (factor, data) {
+      Vector p = getVar(factor[0], data);
+      num r = getVar(factor[1], data);
+      return Circle(p, r);
+    },
+  ],
+  'C:op': [
+    //圆（圆心和圆上一点）
+    'Circle',
+    (factor, data) {
+      Vector o = getVar(factor[0], data);
+      Vector p = getVar(factor[1], data);
+      return Circle.new2P(o, p);
+    },
+  ],
+  'C:diameter': [
+    //圆（圆心和圆上一点）
+    'Circle',
+        (factor, data) {
+      DPoint dp = getVar(factor[0], data);
+      return Circle.newDiameter(dp);
+    },
+  ],
   'IndexP': [
     //对象上取点（直线，二次对象，共生对象）
     'Vector',
@@ -361,6 +417,16 @@ Map<String, List<dynamic>> lib = {
       dynamic obj = getVar(factor[0], data);
       QNum index = getVar(factor[1], data);
       return obj.indexQPoint(index);
+    },
+  ],
+
+  'Index^getN': [
+    //获取索引
+    'num',
+        (factor, data) {
+      dynamic obj = getVar(factor[0], data);
+      Vector p = getVar(factor[1], data);
+      return obj.getPIndex(p);
     },
   ],
   'DP^index': [
@@ -396,15 +462,7 @@ Map<String, List<dynamic>> lib = {
       return dp.l;
     },
   ],
-  'QP': [
-    //创建合点
-    'QPoint',
-    (factor, data) {
-      DPoint dp1 = getVar(factor[0], data);
-      DPoint dp2 = getVar(factor[1], data);
-      return QPoint.new2DP(dp1, dp2);
-    },
-  ],
+
   'QP^xl1': [
     //合点 两种连接-1（交叉直线）
     'XLine',
@@ -429,6 +487,17 @@ Map<String, List<dynamic>> lib = {
       return xl.p;
     },
   ],
+
+  'Harm:dpt': [
+    //计算调和点
+    'DPoint',
+    (factor, data) {
+      DPoint dp = getVar(factor[0], data);
+      num t = getVar(factor[1], data);
+      return dp.harmonic(t);
+    },
+  ],
+
   'C0': [
     //椭圆（中心和共轭直径）
     'Conic0',
@@ -439,6 +508,35 @@ Map<String, List<dynamic>> lib = {
       return Conic0(p0, p1 - p0, p2 - p0);
     },
   ],
+  'C1': [
+    //抛物线
+    'Conic1',
+    (factor, data) {
+      Vector p0 = getVar(factor[0], data);
+      Vector p1 = getVar(factor[1], data);
+      Vector p2 = getVar(factor[2], data);
+      return Conic0(p0, p1 - p0, p2 - p0);
+    },
+  ],
+  'C2': [
+    //双曲线
+    'Conic2',
+    (factor, data) {
+      Vector p0 = getVar(factor[0], data);
+      Vector p1 = getVar(factor[1], data);
+      Vector p2 = getVar(factor[2], data);
+      return Conic2(p0, p1 - p0, p2 - p0);
+    },
+  ],
+  'F': [
+    //二次曲线的焦点
+    'DPoint',
+    (factor, data) {
+      dynamic c = getVar(factor[0], data);
+      return c.F;
+    },
+  ],
+
   'Poly': [
     //多边形
     'Polygon',

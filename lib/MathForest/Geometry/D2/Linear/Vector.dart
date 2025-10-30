@@ -128,6 +128,9 @@ class Vector {
   // 距离
   num dis(Vector other) => (this - other).len;
 
+  //
+  num disPow2(Vector other) => (this - other).pow2;
+
   // 角分向量
   Vector angB(Vector other) => (unit + other.unit);
 

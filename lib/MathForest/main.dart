@@ -40,8 +40,8 @@ export 'Geometry/D2/GMK/Core/GMKData.dart';
 export 'Geometry/D2/GMK/Core/GMKCommand.dart';
 
 // 绘图器
-export 'Geometry/D2/GMK/Monxiv/main.dart';
-export 'Geometry/D2/GMK/Monxiv/GraphOBJ.dart';
+export 'Geometry/D2/GMK/Monxiv/monxiv.dart';
+export 'Geometry/D2/GMK/Monxiv/graphOBJ.dart';
 
 // 交点求解器
 export 'Geometry/D2/Intersection/IntersectionSolver.dart';

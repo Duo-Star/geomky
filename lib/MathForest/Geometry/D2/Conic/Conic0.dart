@@ -1,13 +1,11 @@
 import 'dart:math';
 
-
 import '../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../Fertile/DPoint.dart';
 import '../Fertile/QPoint.dart';
 import 'HLine.dart';
 import 'XLine.dart';
-
 
 import '../Linear/Vector.dart';
 import '../Linear/Line.dart';
@@ -42,107 +40,139 @@ class Conic0 {
 
   String get type => "Conic0";
   //conic0: p + cos(θ)*u + sin(θ)*v
-  Conic0([Vector? p, Vector? u, Vector? v]): //中心，共轭方向1，共轭方向2
-        p = p ?? Vector(),
-        u = u ?? Vector(0,1),
-        v = v ?? Vector(1);
+  Conic0([Vector? p, Vector? u, Vector? v])
+    : //中心，共轭方向1，共轭方向2
+      p = p ?? Vector(),
+      u = u ?? Vector(0, 1),
+      v = v ?? Vector(1);
 
+  //索引点
   Vector indexPoint(num theta) => p + u * cos(theta) + v * sin(theta);
-  DPoint indexDPoint(DNum theta) => DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
+  //索引骈点
+  DPoint indexDPoint(DNum theta) =>
+      DPoint(indexPoint(theta.n1), indexPoint(theta.n2));
+  //合点
   QPoint indexQPoint(QNum theta) => QPoint(
     indexPoint(theta.n1),
     indexPoint(theta.n2),
     indexPoint(theta.n3),
     indexPoint(theta.n4),
   );
-
-  List<num> get ab { //计算长短轴(半)
+  //计算
+  Map<String, num> get ab {
+    //计算长短轴(半)
     num a1 = u.pow2;
-    num a2 = (u.dot(v))*2;
-    num a3=v.pow2;
-    num b1=0.5*(a1+a3);
-    num b2=sqrt( pow(0.5*(a1-a3), 2) + pow(0.5*a2, 2) );
-    num A=sqrt(b1+b2);
-    num B=sqrt(b1-b2);
-    return [A,B]; //非骈，有顺序
+    num a2 = (u.dot(v)) * 2;
+    num a3 = v.pow2;
+    num b1 = 0.5 * (a1 + a3);
+    num b2 = sqrt(pow(0.5 * (a1 - a3), 2) + pow(0.5 * a2, 2));
+    num A = sqrt(b1 + b2);
+    num B = sqrt(b1 - b2);
+    //return [A, B]; //非骈，有顺序
+    return {"a": A, "b": B};
   }
 
-  num get a => ab[0]; // 长半轴
-  num get b => ab[1]; // 短半轴
-  num get c => sqrt(pow(a,2)-pow(b,2));
-
-  bool get isDegenerate {// 判断是否退化，如果u和v平行或其中一个为零向量，则曲线退化
+  //
+  num get a => ab['a']??0; // 长半轴
+  num get b => ab['b']??0; // 短半轴
+  num get c => sqrt(pow(a, 2) - pow(b, 2));
+  //
+  bool get isDegenerate {
+    // 判断是否退化，如果u和v平行或其中一个为零向量，则曲线退化
     return u.crossLen(v) < 1e-10 || (u.len < 1e-10 && v.len < 1e-10);
   }
 
-  num get h { //h 最直接的意义是衡量椭圆的扁平程度（扁率）。
-    final a = ab[0];
-    final b = ab[1];
+  //
+  num get h {
+    //h 最直接的意义是衡量椭圆的扁平程度（扁率）。
     final numerator = pow(a - b, 2);
     final denominator = pow(a + b, 2);
     return numerator / denominator;
   }
-  num get e { //e 离心率
-    final a = ab[0];
-    final b = ab[1];
+
+  //
+  num get e {
+    //e 离心率
     return sqrt(1 - pow(b / a, 2));
   }
-  num get area { //面积
-    return pi * ab[1] * ab[2];
-  }
-  num get cir { //周长
-    return pi * (ab[1] + ab[2]) * (1 + (3 * h) / (10 + sqrt(4 - 3 * h)));
+
+  //面积
+  num get area {
+    return pi * a * b;
   }
 
+  //周长
+  num get cir {
+    return pi * (a + b) * (1 + (3 * h) / (10 + sqrt(4 - 3 * h)));
+  }
+
+  //长轴参数
   DNum get thetaA {
-    num a1=u.pow2;
-    num a2=(u.dot(v))*2;
-    num a3=v.pow2;
-    num b3=atan((a1-a3)/a2);
-    return DNum(pi*( 1 +0.25)-b3/2, pi*( 2 +0.25)-b3/2);
+    num a1 = u.pow2;
+    num a2 = (u.dot(v)) * 2;
+    num a3 = v.pow2;
+    num b3 = atan2(a1 - a3, a2);
+    return DNum(pi * (1 + 0.25) - b3 / 2, pi * (2 + 0.25) - b3 / 2);
   }
 
+  //短轴参数
   DNum get thetaB {
-    num a1=u.pow2;
-    num a2=(u.dot(v))*2;
-    num a3=v.pow2;
-    num b3=atan((a1-a3)/a2);
-    return DNum(pi*( 1 -0.25)-b3/2, pi*( 2 -0.25)-b3/2);
+    num a1 = u.pow2;
+    num a2 = (u.dot(v)) * 2;
+    num a3 = v.pow2;
+    num b3 = atan2(a1 - a3, a2);
+    return DNum(pi * (1 - 0.25) - b3 / 2, pi * (2 - 0.25) - b3 / 2);
   }
 
+  //长轴端点
   DPoint get A {
     return indexDPoint(thetaA);
   }
 
+  //短轴端点
   DPoint get B {
     return indexDPoint(thetaB);
   }
 
+  //长轴，短轴单位方向
   Vector get vA => (indexDPoint(thetaA).p1 - p).unit;
   Vector get vB => (indexDPoint(thetaB).p1 - p).unit;
 
+  // 计算焦点
   DPoint get F => DPoint.newPV(p, vA * c);
-
+  //切方向
   Vector der(theta) => u * (-sin(theta)) + v * (cos(theta));
-
+  //切方向
   Vector tangentVector(theta) => der(theta);
-
-  Line tangentLine(theta){
+  //切线
+  Line tangentLine(theta) {
     return Line(indexPoint(theta), tangentVector(theta));
   }
 
-  num disP2P(Vector P, num theta){
-    return P.dis(indexPoint(theta));
-  }
-
-  num derDisP2P(Vector P, num theta){
-    num dx=2 * (-u.x*sin(theta) + v.x*cos(theta)) * (p.x + u.x*cos(theta) + v.x*sin(theta)-P.x);
-    num dy=2 * (-u.y*sin(theta) + v.y*cos(theta)) * (p.y + u.y*cos(theta) + v.y*sin(theta)-P.y);
-    return dx + dy ;
+  //
+  num disPow2P2thetaP(Vector P, num theta) {
+    return P.disPow2(indexPoint(theta));
   }
 
   //
-  num thetaClosestP2P(Vector P, {double tolerance = 1e-8, int maxIterations = 50}) {
+  num derDisP2thetaP(Vector P, num theta) {
+    num dx =
+        2 *
+        (-u.x * sin(theta) + v.x * cos(theta)) *
+        (p.x + u.x * cos(theta) + v.x * sin(theta) - P.x);
+    num dy =
+        2 *
+        (-u.y * sin(theta) + v.y * cos(theta)) *
+        (p.y + u.y * cos(theta) + v.y * sin(theta) - P.y);
+    return dx + dy;
+  }
+
+  //
+  num thetaClosestP(
+    Vector P, {
+    double tolerance = 1e-8,
+    int maxIterations = 50,
+  }) {
     // 局部优化函数
     num optimizeFrom(num t0) {
       num t = t0;
@@ -150,7 +180,7 @@ class Conic0 {
       num prevDistance = double.infinity;
       for (var i = 0; i < maxIterations; i++) {
         // 计算梯度（距离平方的导数）
-        num gradient = derDisP2P(P, t);
+        num gradient = derDisP2thetaP(P, t);
         // 收敛检测
         if (gradient.abs() < tolerance) break;
         // 更新参数
@@ -159,7 +189,7 @@ class Conic0 {
         t = t % (2 * pi);
         if (t < 0) t += 2 * pi;
         // 计算当前距离
-        num currentDistance = disP2P(P, t);
+        num currentDistance = disPow2P2thetaP(P, t);
         // 检查距离变化
         if ((prevDistance - currentDistance).abs() < tolerance) break;
         prevDistance = currentDistance;
@@ -168,6 +198,7 @@ class Conic0 {
       }
       return t;
     }
+
     // 初始点：覆盖一个周期 [0, 2π)
     List<num> initialThetas = [];
     for (int i = 0; i < 12; i++) {
@@ -178,7 +209,7 @@ class Conic0 {
     num minDistance = double.infinity;
     for (num t0 in initialThetas) {
       num theta = optimizeFrom(t0);
-      num distance = disP2P(P, theta);
+      num distance = disPow2P2thetaP(P, theta);
       if (distance < minDistance) {
         minDistance = distance;
         bestTheta = theta;
@@ -187,26 +218,27 @@ class Conic0 {
     return bestTheta;
   }
 
-  Vector closestP(Vector P){
-    return indexPoint(thetaClosestP2P(P));
+  // 找到椭圆上距离给定点最近的点
+  Vector closestP(Vector P) {
+    return indexPoint(thetaClosestP(P));
   }
 
-  num disP(Vector P){
+  // 计算点到椭圆的最短距离
+  num disP(Vector P) {
     return P.dis(closestP(P));
   }
 
   Vector tangentVectorByP(Vector P) {
-    return tangentVector(thetaClosestP2P(P));
+    return tangentVector(thetaClosestP(P));
   }
 
   Line tangentLineByP(Vector P) {
-    return tangentLine(thetaClosestP2P(P));
+    return tangentLine(thetaClosestP(P));
   }
 
   XLine tangentLineByDP(DPoint dP) {
     return XLine.new2L(tangentLineByP(dP.p1), tangentLineByP(dP.p2));
   }
-
 
   //Conic get conic => Conic().byConic0(this);
 
@@ -214,62 +246,4 @@ class Conic0 {
   String toString() {
     return 'Conic0(${p.toString()}, ${u.toString()}, ${v.toString()})';
   }
-
-
-//*/
-
-
-
-
-/*
-  (Vec, num) findClosestPoint(VectorP, {double tolerance = 1e-8}) {
-    // 方法1：使用多个初始点确保找到全局最优
-    final initialGuesses = [0.0, pi/2, pi, 3*pi/2];
-    num bestTheta = 0.0;
-    num bestDistance = double.infinity;
-
-    for (final guess in initialGuesses) {
-      final theta = _gradientDescent(P, guess, tolerance);
-      final distance = disP2P(P, theta);
-
-      if (distance < bestDistance) {
-        bestTheta = theta;
-        bestDistance = distance;
-      }
-    }
-
-    return (indexPoint(bestTheta), bestTheta);
-  }
-
-  num _normalizeAngle(num theta) {
-    // 将角度归一化到[-π, π]范围
-    while (theta > pi) theta -= 2 * pi;
-    while (theta < -pi) theta += 2 * pi;
-    return theta;
-  }
-
-  num _gradientDescent(VectorP, num initialTheta, double tolerance) {
-    var theta = initialTheta;
-    var learningRate = 0.1;
-
-    for (var i = 0; i < 100; i++) {
-      final derivative = der_disP2P(P, theta);
-
-      if (derivative.abs() < tolerance) {
-        break;
-      }
-
-      // 自适应学习率
-      theta -= learningRate * derivative;
-      learningRate *= 0.95; // 缓慢衰减
-
-      theta = _normalizeAngle(theta);
-    }
-
-    return theta;
-  }
-
- */
-
-
 }

@@ -9,8 +9,8 @@ import 'GMKCompiler.dart' as compiler;
 // 方法集合
 import 'GMKLib.dart' as lib;
 // 几何对象
-import '../Monxiv/GraphOBJ.dart';
-import '../Monxiv/GOBJStyle.dart' as gStyle;
+import '../Monxiv/graphOBJ.dart';
+import '../Monxiv/gOBJStyle.dart' as gStyle;
 
 class GMKCore {
   GMKStructure gmkStructure = GMKStructure.newBlank();
