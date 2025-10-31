@@ -92,18 +92,17 @@ final Map<String, Function> gPainter = {
         num time = monxiv.gmkData.data['time']?.obj ?? 0;
 
         Vector wave(t) {
-          num h = -1.0 * t * (t - 1);
+          num h =( -1.0 * t * (t - 1));
           return u * (sin(10.0 * t * v.len + 2.5 * time) * 0.16 * h) +
               v * t +
               dp.p2;
         }
-
         drawT2PFunction(
           wave,
           monxiv,
           from: 0,
           to: 1,
-          dt: .02 / v.len,
+          dt: (.02 / v.len).clamp(0.001, 0.01),
           paint: paint,
         );
 
@@ -113,7 +112,7 @@ final Map<String, Function> gPainter = {
             monxiv,
             from: 0,
             to: 1,
-            dt: 0.02 / v.len,
+            dt: (.02 / v.len).clamp(0.001, 0.01),
             paint: Paint()
               ..color = gOBJ.style.color.withAlpha(80)
               ..style = PaintingStyle.stroke

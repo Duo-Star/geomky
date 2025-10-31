@@ -70,6 +70,7 @@ class Conic2 {
   }
 
   XLine get X => XLine(p, u, v); //渐近线
+  XLine get asymptote => X;
 
   Vector der(t) => u + v * -pow(t, -2); //切方向
   Vector tangentVector(t) => der(t); //切方向
@@ -91,17 +92,18 @@ class Conic2 {
 
   //Conic get conic => Conic().byConic2(this);
 
-
   // 计算点到双曲线的距离平方函数
   num disPow2P2thetaP(Vector P, num t) {
     return P.disPow2(indexPoint(t));
   }
+
   // 计算距离函数的导数
   num derDisP2thetaP(Vector P, num t) {
     Vector pointOnCurve = indexPoint(t);
     Vector derivative = u - v * (1 / (t * t));
     return 2 * (pointOnCurve - P).dot(derivative);
   }
+
   // 找到使点到双曲线距离最小的参数t
   num thetaClosestP(
     Vector P, {
@@ -150,6 +152,7 @@ class Conic2 {
     }
     return bestT;
   }
+
   // 在指定区间内生成候选点
   List<num> _findCandidatesInInterval(Vector P, num start, num end, int count) {
     List<num> candidates = [];
@@ -215,6 +218,10 @@ class Conic2 {
   Vector tangentVectorByP(Vector P) {
     num t = thetaClosestP(P);
     return tangentVector(t);
+  }
+
+  XLine tangentLineByDP(DPoint dP) {
+    return XLine.new2L(tangentLineByP(dP.p1), tangentLineByP(dP.p2));
   }
 
   // 通过最近点计算切线

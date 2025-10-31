@@ -1,9 +1,16 @@
+import 'package:geomky/MathForest/Geometry/D2/Linear/Vector.dart';
+
 import 'GMKCommand.dart';
 
 class GMKStructure {
   List<String> stepLabel = [];
-  Map<String, GMKCommand> step = <String, GMKCommand> {};
-
+  Map<String, GMKCommand> step = <String, GMKCommand>{};
+  //信息
+  String name = '未闻花名';
+  String author = '江湖隐士';
+  String style = 'classic';
+  Vector o = Vector(300, 300);
+  num lam = 200;
 
   GMKStructure();
 

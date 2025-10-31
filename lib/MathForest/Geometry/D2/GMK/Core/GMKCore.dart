@@ -29,21 +29,8 @@ class GMKCore {
     return gmkStructure;
   }
 
-  String generatedCode() {
-    String source = '//这是标准化生成的gmk-source';
-    source = '$source\n.\$GeoMKY !Nature<Pakoo, Forest>';
-    source = '$source\n//information';
-    source = '$source\n//geo structure code';
-    int structureStepCount = gmkStructure.stepCount;
-    for (var i = 1; i <= structureStepCount; i++) {
-      GMKCommand? igc = gmkStructure.indexStep(i);
-      if (igc!=null) {
-        String s = compiler.gmkCommand2Str(igc);
-        source = '$source\n$s';
-      }
-    }
-    source = '$source\n//style';
-    return source;
+  String generateCode() {
+   return compiler.generateCode(gmkStructure);
   }
 
   String printStructure() {

@@ -6,8 +6,9 @@ import 'package:flutter/services.dart';
 //
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
-import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as gLib;
+import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as g_lib;
 
+//
 import 'MathForest/Geometry/D2/GMK/Monxiv/basicPainter.dart' as painter;
 
 //
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage>
 
     try {
       // 加载源码
-      gmkCore.loadCode(demo.harmonicTest);
+      gmkCore.loadCode(demo.styleT);
       //
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -202,11 +203,12 @@ class _MyHomePageState extends State<MyHomePage>
   // 2. 新增函数：切换卡片状态
   void _toggleCardVisibility() {
     setState(() {
-      print(gmkCore.generatedCode());
+      print(gmkCore.generateCode());
       toolCardVisible = !toolCardVisible;
     });
   }
 
+  //
   @override
   Widget build(BuildContext context) {
     // 你的原始变量

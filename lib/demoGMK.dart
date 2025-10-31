@@ -1,5 +1,6 @@
 library;
-
+//
+//我的第一个测试
 String myFirstTry ="""
 @A is P of 1 1
 @x is N of .E
@@ -13,8 +14,8 @@ String myFirstTry ="""
 @p1 is QP^heart of <qp1>
 @l1 is QP^deriveL of <qp1>
 """;
-
-String tryDeriveLofCir = """
+//圆上合点的衍线
+String deriveLofCir = """
 @p00 is P of 1 1
 @p01 is P of 2 1
 @n1 is N of 1
@@ -34,18 +35,20 @@ String tryDeriveLofCir = """
 @p6 is Ins^ll of <l23> <l14>
 @准线 is L of <p5> <p6>
 @p is IndexP of <c1> 1.2
+#准线 amber
+#c1 red
 """;
-
+//风格测试
 String styleTest ="""
-@p1 is P of 4 -1
-@p2 is P of 5 -1
+@p1 is P of 2.36 1.71
+@p2 is P of 2.82 0.81
 @c2 is C:op of <p1> <p2>
-@p3 is P:v of <1 1>
-
+@p3 is P:v of <0.7996000000000001 3.1115>
 @p4 is P of 3 4
 @p5 is P of 4 4
 @p6 is P of 2 5
 @c0_1 is C0 of <p4> <p5> <p6>
+
 
 #c2 red dotted 2
 #p1 indigo
@@ -60,7 +63,7 @@ c2.setColor(0xffffff00)
 *|
 """;
 
-
+//正五边形
 String regularPentagonal = """
 @c1 is C of .O 1
 @c2 is C of .I 1
@@ -86,7 +89,6 @@ String regularPentagonal = """
 @c0_1 is C0 of <p7> <p8> <p9>
 #poly1 amber 1.2
 #p7 labelShow
-
 @p10 is P of 1.1975308641975309 -3.1049382716049383
 @p11 is P of 6.382716049382716 -1.154320987654321
 @l2 is L of <p10> <p11>
@@ -99,11 +101,10 @@ String regularPentagonal = """
 #dp2 fertileWaveLink
 #dp3 fertileWaveLink
 
- @p14 is C^index
 """;
 
 
-
+//切线测试
 String tanLTest = """
 -@p1 is P of 2 1
 -@p2 is P of 1 0
@@ -114,12 +115,12 @@ String tanLTest = """
 @dp1 is F of <c2_1>
 #dp1 fertileWaveLink
 @n1 is N^sin of <time>
-@n2 is N^mul of <n1> 5
+@n2 is N^mul of <n1> 1
 @p4 is IndexP of <c2_1> <n2>
 @l3 is Tan of <c2_1> <p4>
 """;
 
-
+//Duo定理
 String temple ="""
 // 椭圆
 @p1 is P of 5 4
@@ -144,8 +145,8 @@ String temple ="""
 #dp1 fertileWaveLink
 #dp2 fertileWaveLink
 // 骈点处切线
-@xl1 is Tan^c0dp of <c0> <dp1>
-@xl2 is Tan^c0dp of <c0> <dp2>
+@xl1 is Tan^dp of <c0> <dp1>
+@xl2 is Tan^dp of <c0> <dp2>
 // 染色
 #xl1 red
 #xl2 forest
@@ -169,10 +170,13 @@ String temple ="""
 """;
 
 
-
+//三圆交织直线
 String c1L1C3InsL = """
+//这是标准化生成的gmk-source
+GeoMKY !Nature<Pakoo, Forest>
+//information
+//geo structure code
 @c is C of .O 1
-#c red
 @p is IndexP of <c> 1.5
 @p1 is IndexP of <c> 3.8
 @p2 is IndexP of <c> 4.2
@@ -186,14 +190,26 @@ String c1L1C3InsL = """
 @px1 is Ins^cc_index of <c1> <c2> 2
 @px2 is Ins^cc_index of <c1> <c3> 2
 @px3 is Ins^cc_index of <c2> <c3> 2
+@l is L of <px1> <px2>
+//style
+#c red
+#p gray
+#p1 gray
+#p2 gray
+#p3 gray
+#pa gray
+#pb gray
+#pc gray
+#c1 gray
+#c2 gray
+#c3 gray
 #px1 forest 2
 #px2 forest 2
 #px3 forest 2
-@l is L of <px1> <px2>
 #l amber
-
 """;
-
+//
+//调和点测试
 String harmonicTest ="""
 @slider is L of <0 0> <1 0>
 @thumb is IndexP of <slider> 0
@@ -210,31 +226,94 @@ String harmonicTest ="""
 #c2 red
 """;
 
+//切平分定理
+String tanEqDivide = """
+@slider1 is L of <0 0> <1 0>
+@thumb1 is IndexP of <slider1> -2
+@t1 is Index^getN of <slider1> <thumb1>
+@slider2 is L of <0 -.5> <1 -.5>
+@thumb2 is IndexP of <slider2> -.6
+@t2 is Index^getN of <slider2> <thumb2>
+//
+@c2_o is P of 2.5 2.3
+@c2_u is P of 3.3 2.1
+@c2_v is P of 2.6 3.4
+@c2 is C2 of <c2_o> <c2_u> <c2_v>
+@dn is DN of <t1> <t2>
+@dp is IndexDP of <c2> <dn>
+#dp fertileWaveLink
+@xl is Tan^dp of <c2> <dp>
+@midP is DP^mid of <dp>
+@xlCenter is XL^p of <xl>
+@l is L of <c2_o> <midP>
+#l amber
+""";
+
+
+//双曲线和渐近线被截相等部分
+String c2XlCutEq="""
+@slider is L of <0 0> <1 0>
+@thumb is IndexP of <slider> 0
+@v is Index^getN of <slider> <thumb>
+@vTime is N^mul of <time> <v>
+@c2_o is P of 2.5 2.3
+@c2_u is P of 3.4 2.0
+@c2_v is P of 2.6 3.4
+@c2 is C2 of <c2_o> <c2_u> <c2_v>
+@xl is Asym of <c2>
+//
+@cirP is P of 6 5
+@cir is C of <cirP> 1
+@ap is IndexP of <cir> <vTime>
+@al is L of <ap> <cirP>
+@dp_c2 is Ins^lc2 of <al> <c2>
+// #dp_c2 fertileWaveLink
+@dp_xl is Ins^lxl of <al> <xl>
+@midP is DP^mid of <dp_c2>
+#midP amber
+
+""";
+
+
+//
+String ruSlider = """
+//创建滑动条
+@sliderBody is L of .O .I
+@sliderHead is IndexP of <sliderBody> 0
+@t is Index^getN of <sliderBody> <sliderHead>
+//计算坐标
+@x is N^cos of <t>
+@y is N^mul of <t> <t>
+//
+@A is P of <t> <y>
 
 
 
+""";
 
 
+String styleT ="""
+@A is P of 1 1
+@B is P of 2 2
+#A red 5
+#B amber
+""";
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+String styleT_ ="""
+//这是程序标准化生成的gmk-source
+>GeoMKY !Nature<Pakoo, Forest> by Duo
+//-----Information-----
+>name 未闻花名
+>author 江湖隐士
+>o <300 300>
+>lam 200
+>style classic
+//-----Structure-----
+@A is P of 1 1
+@B is P of 2 2
+//-----Style-----
+#A red 5
+#B amber
+""";
 
 

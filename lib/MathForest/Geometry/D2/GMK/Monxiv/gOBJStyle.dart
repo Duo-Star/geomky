@@ -73,6 +73,32 @@ class GOBJStyle {
     return result;
   }
 
+  String generateCode(){
+    String code = '';
+    // 写入color
+    String colorCode = '';
+    for (String key in colors.keys) {
+      if (color.hashCode == colors[key].hashCode) {
+        colorCode = key;
+      }
+    }
+    code = '$code$colorCode';
+    //写入显示&隐藏
+    code = '$code${show?"":" hide"}';
+    //大小
+    code = '$code${(size==1)?"":" ${size.toString()}"}';
+    //opacity
+
+    //
+    code = '$code${labelShow?" labelShow":""}';
+    code = '$code${trace?" trace":""}';
+    code = '$code${fertileWaveLink?" fertileWaveLink":""}';
+    code = '$code${(shape=='nShape')?'':shape}';
+    return code;
+  }
+
+  String get code => generateCode();
+
   @override
   String toString() {
     return 'color:${color.toString()}, show:$show, ...';

@@ -3,6 +3,7 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
+import 'package:geomky/MathForest/Geometry/D2/GMK/Monxiv/gOBJStyle.dart';
 
 import '../Monxiv/gOBJStyle.dart' as gStyle;
 
@@ -18,8 +19,14 @@ import '../../../../Algebra/Functions/Main.dart' as funcs;
 String removeComments(String input) {
   // .*? 表示非贪婪匹配，可以跨行匹配（因为使用了 dotAll: true）
   String result = '';
-  result = input.replaceAll(RegExp(r'``.*?``', multiLine: true, dotAll: true), '');
-  result = result.replaceAll(RegExp(r'/\*.*?\*/', multiLine: true, dotAll: true), '');
+  result = input.replaceAll(
+    RegExp(r'``.*?``', multiLine: true, dotAll: true),
+    '',
+  );
+  result = result.replaceAll(
+    RegExp(r'/\*.*?\*/', multiLine: true, dotAll: true),
+    '',
+  );
   result = result.replaceAll(RegExp(r'//.*$', multiLine: true), '');
   return result;
 }
@@ -137,9 +144,9 @@ dynamic _parseValue(String value) {
   return value;
 }
 
-
+//截取之后内容
 String extractAfter(String input, String? sign) {
-  String sign_ = sign??' of ';
+  String sign_ = sign ?? ' of ';
   final index = input.indexOf(sign_);
   if (index == -1) return '';
   final startIndex = index + sign_.length;
@@ -147,7 +154,7 @@ String extractAfter(String input, String? sign) {
   return input.substring(startIndex);
 }
 
-
+//开始编译
 GMKStructure goCompiler(String source) {
   String source_ = removeComments(source);
   GMKStructure structure = GMKStructure.newBlank();
@@ -164,7 +171,7 @@ GMKStructure goCompiler(String source) {
         gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
         cmd.style = style;
         structure.addStep(cmd);
-      }  catch (e, stackTrace) {
+      } catch (e, stackTrace) {
         Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
       }
@@ -177,9 +184,9 @@ GMKStructure goCompiler(String source) {
         GMKCommand cmd = GMKCommand(method, label, factor);
         cmd.type = (g_lib.lib[method]?[0]) ?? '?unType';
         gStyle.GOBJStyle style = gStyle.GOBJStyle.apply(cmd.type);
-        cmd.style = style..show=false;
+        cmd.style = style..show = false;
         structure.addStep(cmd);
-      }  catch (e, stackTrace) {
+      } catch (e, stackTrace) {
         Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
       }
@@ -191,6 +198,25 @@ GMKStructure goCompiler(String source) {
       structure.step[label]?.style = style;
       if (kDebugMode) {
         print('set style<$label>:${style.toString()}');
+      }
+    } else if (line.startsWith('>')) {
+      try {
+        List<dynamic> factor = str2Factor(extractAfter(line, '>'));
+        switch (factor[0]) {
+          case const ('name'):
+            structure.name = factor[1];
+          case const ('author'):
+            structure.author = factor[1];
+          case const ('o'):
+            structure.o = factor[1];
+          case const ('lam'):
+            structure.lam = factor[1];
+          case const ('style'):
+            structure.style = factor[1];
+        }
+      } catch (e, stackTrace) {
+        Exception('错误: $e');
+        Exception('堆栈跟踪: $stackTrace');
       }
     }
   }
@@ -263,7 +289,7 @@ String gmkCommand2Str(GMKCommand gc) {
   return '@${gc.label} is ${gc.method} of ${factor2Str(gc.factor)}';
 }
 
-
+//样式解析器
 gStyle.GOBJStyle styleCompiler(gStyle.GOBJStyle oldStyle, String sCode) {
   gStyle.GOBJStyle result = oldStyle;
   String label = subStringBetween(sCode, '#', ' ').trim();
@@ -276,9 +302,10 @@ gStyle.GOBJStyle styleCompiler(gStyle.GOBJStyle oldStyle, String sCode) {
       result.color = gStyle.colors[itemFactor]!;
     } else if (gStyle.shape.contains(itemFactor)) {
       result.shape = itemFactor;
-    } else if (itemFactor.runtimeType == double || itemFactor.runtimeType == int) {
+    } else if (itemFactor.runtimeType == double ||
+        itemFactor.runtimeType == int) {
       result.size = itemFactor;
-    }  else if (gStyle.show.contains(itemFactor)) {
+    } else if (gStyle.show.contains(itemFactor)) {
       result.show = (itemFactor == 'show');
     } else if (gStyle.labelShow.contains(itemFactor)) {
       result.labelShow = (itemFactor == 'labelShow');
@@ -289,12 +316,36 @@ gStyle.GOBJStyle styleCompiler(gStyle.GOBJStyle oldStyle, String sCode) {
   return result;
 }
 
+String generateCode(GMKStructure gmkStructure) {
+  String source = '//这是程序标准化生成的gmk-source';
+  source = '$source\n>GeoMKY !Nature<Pakoo, Forest> by Duo';
+  source = '$source\n//-----Information-----';
+  source = '$source\n>name ${gmkStructure.name}';
+  source = '$source\n>author ${gmkStructure.author}';
+  source = '$source\n>o <${gmkStructure.o.x} ${gmkStructure.o.y}>';
+  source = '$source\n>lam ${gmkStructure.lam}';
+  source = '$source\n>style ${gmkStructure.style}';
+  source = '$source\n//-----Structure-----';
+  int structureStepCount = gmkStructure.stepCount;
+  for (var i = 1; i <= structureStepCount; i++) {
+    GMKCommand? igc = gmkStructure.indexStep(i);
+    if (igc != null) {
+      String s = gmkCommand2Str(igc);
+      source = '$source\n$s';
+    }
+  }
+  source = '$source\n//-----Style-----';
+  for (var i = 1; i <= structureStepCount; i++) {
+    GMKCommand? igc = gmkStructure.indexStep(i);
+    if (igc != null) {
+      String s = igc.style.generateCode();
+      s = '#${igc.label} $s';
+      source = '$source\n$s';
+    }
+  }
 
-
-
-
-
-
+  return source;
+}
 
 /*
 String str =

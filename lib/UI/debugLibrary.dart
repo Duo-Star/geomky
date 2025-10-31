@@ -163,7 +163,7 @@ i(context){
                     lll('结构');
                     m('printStructure:\n${gmkCore.printStructure()}');
                     lll('生成代码');
-                    m('generatedCode:\n${gmkCore.generatedCode()}');
+                    m('generatedCode:\n${gmkCore.generateCode()}');
                     return msg;
                   }),
                 ],

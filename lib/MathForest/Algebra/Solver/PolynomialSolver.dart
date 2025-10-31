@@ -12,6 +12,7 @@ import '../Trunk/Fertile/QNum.dart';
 
 import '../Trunk/Complex.dart';
 
+// 实数二次方程
 DNum solveQuadratic(num a, num b, num c){
   num delta = math.pow(b, 2) - a * c * 4;
   num n1 = (-b + math.sqrt(delta))/(a*2);
@@ -19,6 +20,7 @@ DNum solveQuadratic(num a, num b, num c){
   return DNum(n1, n2);
 }
 
+// 虚数二次方程
 DNum solveComplexQuadratic(Complex a, Complex b, Complex c){
   Complex delta = b.pow(2) - a * c * 4;
   var n1 = (-b + delta.sqrt)/(a*2);
@@ -26,8 +28,8 @@ DNum solveComplexQuadratic(Complex a, Complex b, Complex c){
   return DNum(n1, n2);
 }
 
+// 使用卡尔达诺公式求解一元三次方程: a*x^3 + b*x^2 + c*x + d = 0
 TNum solveCubic(Complex a, Complex b, Complex c, Complex d) {
-  // 使用卡尔达诺公式求解一元三次方程: a*x^3 + b*x^2 + c*x + d = 0
 
   if (a.isZero) {
     // 如果a=0，退化为二次方程
@@ -73,8 +75,9 @@ TNum solveCubic(Complex a, Complex b, Complex c, Complex d) {
 }
 
 
+
+// 使用费拉里方法求解一元四次方程: a*x^4 + b*x^3 + c*x^2 + d*x + e = 0
 QNum solveQuartic(Complex a, Complex b, Complex c, Complex d, Complex e) {
-  // 使用费拉里方法求解一元四次方程: a*x^4 + b*x^3 + c*x^2 + d*x + e = 0
 
   if (a.isZero) {
     // 如果a=0，退化为三次方程
