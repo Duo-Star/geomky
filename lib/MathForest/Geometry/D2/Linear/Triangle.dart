@@ -8,6 +8,8 @@
 
 import 'dart:math';
 import 'Vector.dart';
+import 'Segment.dart';
+
 
 class Triangle {
   Vector a;
@@ -67,6 +69,11 @@ class Triangle {
   }
 
   //
+  List<Vector> get vertices {
+    return [a, b, c];
+  }
+
+  //
   bool isPInside(Vector p) {
     return false;
   }
@@ -86,13 +93,31 @@ class Triangle {
     return false;
   }
 
+
+  /// 计算点 [p] 到多边形所有边的最短距离
+  num disP(Vector p) {
+    num minDistance = double.infinity;
+    for (int i = 0; i < vertices.length; i++) {
+      final v1 = vertices[i];
+      final v2 = vertices[(i + 1) % vertices.length]; // 循环连接最后一个点到第一个点
+      final segment = Segment(v1, v2);
+      num distance = segment.disP(p);
+      if (distance < minDistance) {
+        minDistance = distance;
+      }
+    }
+    return minDistance;
+  }
+
+
+
   // 字符化
   @override
   String toString() =>
       'Triangle(a:${a.toString()}, b:${b.toString()}, c:${c.toString()})';
 
   //类型
-  String get type => "Vec2";
+  String get type => "Triangle";
 
   // 哈希值
   int get hash => Object.hash(a.x, a.y, b.x, b.y, c.x, c.y);

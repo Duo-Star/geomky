@@ -96,4 +96,18 @@ Map<String, List<dynamic>> lib = {
       return Polygon(ds.cast<Vector>());
     },
   ],
+
+
+  'Tri': [
+    //三角形
+    'Triangle',
+        (factor, data) {
+      Vector p1 = getVar(factor[0], data);
+      Vector p2 = getVar(factor[1], data);
+      Vector p3 = getVar(factor[2], data);
+      return Triangle(p1, p2, p3);
+    },
+  ],
+
+
 };

@@ -30,6 +30,9 @@ dependencies:
   # 与CupertinoIcons类一起使用可获得iOS风格图标。
   cupertino_icons: ^1.0.8
 
+  #
+  provider: ^6.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

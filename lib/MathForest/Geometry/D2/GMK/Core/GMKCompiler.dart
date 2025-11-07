@@ -160,6 +160,7 @@ GMKStructure goCompiler(String source) {
   GMKStructure structure = GMKStructure.newBlank();
   List<String> lines = source_.split('\n');
   for (var line in lines) {
+    //
     if (line.startsWith('@')) {
       try {
         String label = subStringBetween(line, '@', ' is ').trim();
@@ -175,7 +176,8 @@ GMKStructure goCompiler(String source) {
         Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
       }
-    } else if (line.startsWith('-@')) {
+    } // 辅助对象
+    else if (line.startsWith('-@')) {
       try {
         String label = subStringBetween(line, '@', ' is ').trim();
         String method = subStringBetween(line, ' is ', ' of ').trim();
@@ -190,7 +192,8 @@ GMKStructure goCompiler(String source) {
         Exception('错误: $e');
         Exception('堆栈跟踪: $stackTrace');
       }
-    } else if (line.startsWith('#')) {
+    }// 设置主题
+    else if (line.startsWith('#')) {
       String label = subStringBetween(line, '#', ' ').trim();
       gStyle.GOBJStyle? oldStyle = structure.step[label]?.style;
       gStyle.GOBJStyle style = styleCompiler(oldStyle!, line);
@@ -199,7 +202,8 @@ GMKStructure goCompiler(String source) {
       if (kDebugMode) {
         print('set style<$label>:${style.toString()}');
       }
-    } else if (line.startsWith('>')) {
+    } // 处理信息
+    else if (line.startsWith('>')) {
       try {
         List<dynamic> factor = str2Factor(extractAfter(line, '>'));
         switch (factor[0]) {
@@ -220,6 +224,8 @@ GMKStructure goCompiler(String source) {
       }
     }
   }
+  //应用主题
+  structure.applyStyle();
 
   return structure;
 }

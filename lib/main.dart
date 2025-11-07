@@ -4,6 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 //
+import 'UI/gmkCodeEditor.dart';
+import 'UI/toolBar/stateBtn.dart' as state_btn;
+import 'UI/toolBar/filePage.dart' as file_page;
+import 'UI/toolBar/linearPage.dart' as linear_page;
+import 'UI/toolBar/conicPage.dart' as conic_page;
+import 'UI/toolBar/fertilePage.dart' as fertile_page;
+import 'UI/toolBar/elementPage.dart' as element_page;
+import 'UI/toolBar/attributePage.dart' as attribute_page;
+
+//
 import 'MathForest/main.dart';
 import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as g_lib;
@@ -13,7 +23,7 @@ import 'MathForest/Geometry/D2/GMK/Monxiv/basicPainter.dart' as painter;
 
 //
 import 'UI/debugLibrary.dart' as debug_library;
-import 'demoGMK.dart' as demo;
+import 'demoGMK.dart' as demo_gmk;
 
 void main() {
   runApp(const MyApp());
@@ -23,7 +33,6 @@ void main() {
 class GMKState {
   GMKData gmkData = GMKData({});
   double time = 0.0;
-  String toolSelect = '';
   GMKState();
 
   // 复制方法，用于在状态更新时保持引用不变
@@ -31,7 +40,6 @@ class GMKState {
     final newState = GMKState();
     newState.gmkData = gmkData;
     newState.time = time;
-    newState.toolSelect = toolSelect;
     return newState;
   }
 }
@@ -83,18 +91,40 @@ class MyApp extends StatelessWidget {
       title: 'GeoMKY',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Color.fromARGB(255, 230, 228, 186),
+          seedColor: Color.fromARGB(255, 0, 228, 186),
         ),
       ),
-      home: const MyHomePage(title: 'GeoMKY'),
+      home: const MyHomePage(title: 'GeoMKY', code: ''),
+      routes: {
+        '/gml-editor': (context) => const GmkEditorPage(),
+
+        '/gmk': (context) {
+          // 从路由参数中获取传递的 code
+          final args = ModalRoute.of(context)!.settings.arguments;
+          String code = '';
+
+          if (args is Map<String, String>) {
+            code = args['code'] ?? '默认代码（未传参）';
+          } else {
+            code = '参数格式错误，使用默认代码';
+          }
+
+          // 返回你的目标页面，并传入动态 code
+          return MyHomePage(
+            title: 'GML 编辑器',
+            code: code, // ✅ 动态代码内容
+          );
+        },
+      },
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.code});
 
   final String title;
+  final String code;
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -118,15 +148,20 @@ class _MyHomePageState extends State<MyHomePage>
   @override
   void initState() {
     super.initState();
-    _inputController.addListener(() {
-      _inputValue = _inputController.text;
-    });
-
-    // print(_gmkState.time);
 
     try {
       // 加载源码
-      gmkCore.loadCode(demo.styleT);
+
+      String code = widget.code;
+      code = '''
+>style deep-ocean
+@c is C of .O 1
+@tri1 is Tri of .O .I .J
+#tri1 red
+
+      ''';
+      print(code);
+      gmkCore.loadCode(code);
       //
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -177,7 +212,6 @@ class _MyHomePageState extends State<MyHomePage>
   void dispose() {
     _physicsTimer.cancel();
     _animationController.dispose();
-    _inputController.dispose();
     super.dispose();
   }
 
@@ -187,26 +221,6 @@ class _MyHomePageState extends State<MyHomePage>
   double tabPageH = 80;
   double toolCardTitleSize = 22;
   double toolCardTextSize = 18;
-  //
-  // 新增状态变量：用于浮动卡片中的输入和下拉菜单
-  String _inputValue = 'name';
-  String _unitValue = 'P1';
-  String _modeValue = 'P1';
-  final List<String> _units = ['P1', 'P2', 'P3'];
-  final List<String> _modes = ['P1', 'P2', 'P3'];
-
-  // 输入框控制器
-  final TextEditingController _inputController = TextEditingController(
-    text: 'name',
-  );
-
-  // 2. 新增函数：切换卡片状态
-  void _toggleCardVisibility() {
-    setState(() {
-      print(gmkCore.generateCode());
-      toolCardVisible = !toolCardVisible;
-    });
-  }
 
   //
   @override
@@ -221,11 +235,15 @@ class _MyHomePageState extends State<MyHomePage>
     return SafeArea(
       child: Scaffold(
         // 新增：一个按钮来演示如何调用函数切换卡片
-        floatingActionButton: FloatingActionButton(
-          onPressed: _toggleCardVisibility,
-          tooltip: toolCardVisible ? '隐藏卡片' : '显示卡片',
-          child: Icon(
-            toolCardVisible ? Icons.visibility_off : Icons.visibility,
+        floatingActionButton: Visibility(
+          visible: (monxiv.toolSelect != ''),
+          child: FloatingActionButton(
+            onPressed: () {
+              monxiv.toolSelect = '';
+            },
+            backgroundColor: gmkCore.gmkStructure.gmkStyle.primaryContainer,
+            tooltip: '切换到移动工具',
+            child: Icon(Icons.add_business_rounded),
           ),
         ),
         body: Stack(
@@ -254,24 +272,25 @@ class _MyHomePageState extends State<MyHomePage>
             // --- 顶部 TabBar & TabBarView (第二层) ---
             Container(
               height: tabBarH + tabPageH,
-              color: Theme.of(context).colorScheme.surface,
+              color: gmkCore.gmkStructure.gmkStyle.secondaryContainer,
               child: DefaultTabController(
                 initialIndex: () {
-                  return selectLabel == '' ? 1 : 6;
+                  return selectLabel == '' ? 1 : 2;
                 }(),
-                length: 8,
+                length: 6,
                 child: Column(
                   children: [
                     Container(
                       height: tabBarH,
-                      color: Theme.of(context).colorScheme.secondaryContainer,
+                      color: gmkCore.gmkStructure.gmkStyle.secondaryContainer,
                       child: TabBar(
                         isScrollable: true,
-                        indicatorColor: Theme.of(context).colorScheme.primary,
-                        labelColor: Theme.of(context).colorScheme.primary,
-                        unselectedLabelColor: Theme.of(
-                          context,
-                        ).colorScheme.primary,
+                        indicatorColor:
+                            gmkCore.gmkStructure.gmkStyle.onPrimaryContainer,
+                        labelColor:
+                            gmkCore.gmkStructure.gmkStyle.onPrimaryContainer,
+                        unselectedLabelColor:
+                            gmkCore.gmkStructure.gmkStyle.secondary,
                         labelPadding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                         ),
@@ -284,287 +303,34 @@ class _MyHomePageState extends State<MyHomePage>
                           const Tab(text: '二次'),
                           const Tab(text: '复生'),
                           const Tab(text: '组件'),
-                          const Tab(text: '视图'),
                           Tab(text: '属性:$selectLabel'),
-                          const Tab(text: '关于'),
                         ],
                       ),
                     ),
                     Expanded(
                       child: TabBarView(
                         children: [
-                          // 文件选项卡内容 (水平滚动工具栏)
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  // 第一个按钮
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      print('保存被点击');
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(0, 45),
-                                      foregroundColor: Colors.black,
-                                      side: const BorderSide(
-                                        color: Color.fromARGB(0, 0, 0, 0),
-                                        width: 0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(0),
-                                      ),
-                                    ),
-                                    child: const Text('保存'),
-                                  ),
-                                  // 按钮组 1
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮1A'),
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮1B'),
-                                      ),
-                                    ],
-                                  ),
-                                  VerticalDivider(
-                                    width: 1,
-                                    color: Colors.black54,
-                                  ),
-                                  // 按钮组 2
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮2A'),
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮2B'),
-                                      ),
-                                    ],
-                                  ),
-                                  VerticalDivider(
-                                    width: 1,
-                                    color: Colors.black54,
-                                  ),
-                                  // 按钮组 3
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮3A'),
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {},
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮3B'),
-                                      ),
-                                    ],
-                                  ),
-                                  VerticalDivider(
-                                    width: 1,
-                                    color: Colors.black54,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          //1. 文件选项卡内容 (水平滚动工具栏)
+                          file_page.page(context, gmkCore, monxiv),
 
-                          // 线性选项卡内容
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  OutlinedButton(
-                                    onPressed: () {
-                                      _gmkState.toolSelect = '点';
-                                      toolCardVisible = true;
-                                    },
-                                    style: OutlinedButton.styleFrom(
-                                      minimumSize: const Size(0, 45),
-                                      foregroundColor: Colors.black,
-                                      side: const BorderSide(
-                                        color: Color.fromARGB(0, 0, 0, 0),
-                                        width: 0,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(0),
-                                      ),
-                                    ),
-                                    child: const Text('点'),
-                                  ),
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          print('按钮4A被点击');
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮4A'),
-                                      ),
-                                      OutlinedButton(
-                                        onPressed: () {
-                                          print('按钮4B被点击');
-                                        },
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(0, 45),
-                                          foregroundColor: Colors.black,
-                                          side: const BorderSide(
-                                            color: Color.fromARGB(0, 0, 0, 0),
-                                            width: 0,
-                                          ),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              0,
-                                            ),
-                                          ),
-                                        ),
-                                        child: const Text('按钮4B'),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          //2. 线性选项卡内容
+                          linear_page.page(context, gmkCore, monxiv),
 
-                          // 其他选项卡
-                          Center(
-                            child: Text(
-                              '二次内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              '复生内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              '组件内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              '视图内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              '属性内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              '关于内容页',
-                              style: TextStyle(fontSize: 12),
-                            ),
-                          ),
+                          //3. conic选项卡
+                          conic_page.page(context, gmkCore, monxiv),
+
+                          //4. 复生内容页
+                          fertile_page.page(context, gmkCore, monxiv),
+
+                          //5. 组件
+                          element_page.page(context, gmkCore, monxiv),
+
+
+                          //6. 属性内容页
+                          attribute_page.page(context, gmkCore, monxiv),
+
+
+
                         ],
                       ),
                     ),
@@ -573,7 +339,7 @@ class _MyHomePageState extends State<MyHomePage>
               ),
             ),
             // --- 3. 新增浮动卡片 (第三层: 左下角) ---
-            if (toolCardVisible) // 使用条件渲染控制显示/隐藏
+            if (monxiv.toolSelect != '') // 使用条件渲染控制显示/隐藏
               Positioned(
                 left: 16.0,
                 bottom: 16.0,
@@ -582,7 +348,7 @@ class _MyHomePageState extends State<MyHomePage>
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: Theme.of(context).colorScheme.surface,
+                  color: gmkCore.gmkStructure.gmkStyle.surface,
                   child: Container(
                     padding: const EdgeInsets.all(12.0),
                     width: 275, // 增加宽度以适应新控件
@@ -591,141 +357,51 @@ class _MyHomePageState extends State<MyHomePage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '新建',
+                          '新建: ${monxiv.toolSelect}',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: toolCardTitleSize,
-                            color: Theme.of(context).colorScheme.primary,
+                            color: gmkCore
+                                .gmkStructure
+                                .gmkStyle
+                                .onPrimaryContainer,
                           ),
                         ),
-                        const SizedBox(height: 8),
-
-                        // 替换后的横向输入和选择控件
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // 1. 输入框
-                            Text(
-                              '@',
-                              style: TextStyle(fontSize: toolCardTextSize),
-                            ),
-                            SizedBox(
-                              width: 60,
-                              child: TextField(
-                                controller: _inputController,
-                                keyboardType: TextInputType.number,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: toolCardTextSize),
-                                decoration: const InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(
-                                    vertical: 3,
-                                    horizontal: 3,
-                                  ),
-                                  border: UnderlineInputBorder(),
-                                ),
-                              ),
-                            ),
-
-                            // 2. 文字和下拉选项 1 (单位)
-                            Text(
-                              ' is C:op of ',
-                              style: TextStyle(fontSize: toolCardTextSize),
-                            ),
-                            SizedBox(
-                              height: 24, // 限制高度以压缩空间
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _unitValue,
-                                  isDense: true,
-                                  iconSize: 16,
-                                  style: TextStyle(
-                                    fontSize: toolCardTextSize,
-                                    color: Colors.black,
-                                  ),
-                                  items: _units.map((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value,
-                                        style: TextStyle(
-                                          fontSize: toolCardTextSize,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      _unitValue = newValue!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                            Text(
-                              ',',
-                              style: TextStyle(fontSize: toolCardTextSize),
-                            ),
-                            SizedBox(
-                              height: 24,
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: _modeValue,
-                                  isDense: true,
-                                  iconSize: 16,
-                                  style: TextStyle(
-                                    fontSize: toolCardTextSize,
-                                    color: Colors.black,
-                                  ),
-                                  items: _modes.map((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value,
-                                        style: TextStyle(
-                                          fontSize: toolCardTextSize,
-                                        ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      _modeValue = newValue!;
-                                    });
-                                  },
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // 结束替换
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
+                        /*
+                         const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            OutlinedButton(onPressed: () {}, child: Text('取消')),
+                            OutlinedButton(
+                              onPressed: () {},
+                              child: Text(
+                                '取消',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: gmkCore.gmkStructure.gmkStyle.primary,
+                                ),
+                              ),
+                            ),
                             SizedBox(width: 4),
                             ElevatedButton(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Theme.of(
-                                  context,
-                                ).colorScheme.primary,
+                                backgroundColor:
+                                    gmkCore.gmkStructure.gmkStyle.primary,
                               ),
                               child: Text(
                                 '确定',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  //fontSize: toolCardTextSize,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimary,
+                                  color:
+                                      gmkCore.gmkStructure.gmkStyle.onPrimary,
                                 ),
                               ),
                             ),
                           ],
                         ),
+            */
                       ],
                     ),
                   ),

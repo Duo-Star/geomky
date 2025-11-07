@@ -1,8 +1,13 @@
 library;
 //
-//我的第一个测试
-String myFirstTry ="""
-@A is P of 1 1
+
+Map<String, String> demo = {
+  //我的第一个测试
+  "myFirstTry": """
+>style forest
+@P{1762065961214} is P:v of <2.9368 4.031000000000001>
+
+@A is P:v of <1 1>
 @x is N of .E
 @B is P of <x> .PI
 @C is P:v of <2 2>
@@ -13,9 +18,10 @@ String myFirstTry ="""
 @qp1 is IndexQP of <c1> <qn1>
 @p1 is QP^heart of <qp1>
 @l1 is QP^deriveL of <qp1>
-""";
-//圆上合点的衍线
-String deriveLofCir = """
+""",
+  //圆上合点的衍线
+  "deriveLofCir": """
+>style sky
 @p00 is P of 1 1
 @p01 is P of 2 1
 @n1 is N of 1
@@ -37,9 +43,10 @@ String deriveLofCir = """
 @p is IndexP of <c1> 1.2
 #准线 amber
 #c1 red
-""";
-//风格测试
-String styleTest ="""
+""",
+  //风格测试
+  "styleTest": """
+>style volcano
 @p1 is P of 2.36 1.71
 @p2 is P of 2.82 0.81
 @c2 is C:op of <p1> <p2>
@@ -61,10 +68,11 @@ this is a lua script
 c2 = gmk.getVar('c2')
 c2.setColor(0xffffff00)
 *|
-""";
+""",
 
-//正五边形
-String regularPentagonal = """
+  //正五边形
+  "regularPentagonal": """
+>style castle
 @c1 is C of .O 1
 @c2 is C of .I 1
 @xL is L of .O .I
@@ -101,27 +109,28 @@ String regularPentagonal = """
 #dp2 fertileWaveLink
 #dp3 fertileWaveLink
 
-""";
+""",
 
-
-//切线测试
-String tanLTest = """
--@p1 is P of 2 1
--@p2 is P of 1 0
--@p3 is P of 0 1
+  //切线测试
+  "tanLTest": """
+>style deep-ocean
+@p1 is P of 1.3 1
+@p2 is P of 1 0
+@p3 is P of 0 1
 @c2_1 is C0 of <p1> <p2> <p3>
 -@l1 is L of <p1> <p2>
 -@l2 is L of <p1> <p3>
 @dp1 is F of <c2_1>
 #dp1 fertileWaveLink
 @n1 is N^sin of <time>
-@n2 is N^mul of <n1> 1
+@n2 is N^mul of <n1> 3
 @p4 is IndexP of <c2_1> <n2>
 @l3 is Tan of <c2_1> <p4>
-""";
+""",
 
-//Duo定理
-String temple ="""
+  //Duo定理
+  "temple": """
+>style observatory
 // 椭圆
 @p1 is P of 5 4
 @p2 is P of 2.2 3.3
@@ -167,11 +176,10 @@ String temple ="""
 //
 @Temple is L of <Q> <P>
 #Temple amber 1.5
-""";
+""",
 
-
-//三圆交织直线
-String c1L1C3InsL = """
+  //三圆交织直线
+  "c1L1C3InsL": """
 //这是标准化生成的gmk-source
 GeoMKY !Nature<Pakoo, Forest>
 //information
@@ -207,10 +215,11 @@ GeoMKY !Nature<Pakoo, Forest>
 #px2 forest 2
 #px3 forest 2
 #l amber
-""";
-//
-//调和点测试
-String harmonicTest ="""
+""",
+  //
+
+  //调和点测试
+  "harmonicTest": """
 @slider is L of <0 0> <1 0>
 @thumb is IndexP of <slider> 0
 @t is Index^getN of <slider> <thumb>
@@ -224,10 +233,11 @@ String harmonicTest ="""
 @c2 is C:diameter of <dp2>
 #c1 purple
 #c2 red
-""";
+""",
+  //
 
-//切平分定理
-String tanEqDivide = """
+  //切平分定理
+  "tanEqDivide": """
 @slider1 is L of <0 0> <1 0>
 @thumb1 is IndexP of <slider1> -2
 @t1 is Index^getN of <slider1> <thumb1>
@@ -247,11 +257,12 @@ String tanEqDivide = """
 @xlCenter is XL^p of <xl>
 @l is L of <c2_o> <midP>
 #l amber
-""";
+#thumb1 labelShow
+#thumb2 labelShow
+""",
 
-
-//双曲线和渐近线被截相等部分
-String c2XlCutEq="""
+  //双曲线和渐近线被截相等部分
+  "c2XlCutEq": """
 @slider is L of <0 0> <1 0>
 @thumb is IndexP of <slider> 0
 @v is Index^getN of <slider> <thumb>
@@ -272,11 +283,10 @@ String c2XlCutEq="""
 @midP is DP^mid of <dp_c2>
 #midP amber
 
-""";
+""",
 
-
-//
-String ruSlider = """
+  //
+  "ruSlider": """
 //创建滑动条
 @sliderBody is L of .O .I
 @sliderHead is IndexP of <sliderBody> 0
@@ -287,19 +297,19 @@ String ruSlider = """
 //
 @A is P of <t> <y>
 
+""",
 
-
-""";
-
-
-String styleT ="""
+  //
+  "styleT": """
 @A is P of 1 1
 @B is P of 2 2
 #A red 5
 #B amber
-""";
+""",
+  //
 
-String styleT_ ="""
+  //
+  "styleT_": """
 //这是程序标准化生成的gmk-source
 >GeoMKY !Nature<Pakoo, Forest> by Duo
 //-----Information-----
@@ -314,6 +324,5 @@ String styleT_ ="""
 //-----Style-----
 #A red 5
 #B amber
-""";
-
-
+""",
+};

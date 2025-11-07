@@ -13,6 +13,7 @@ import 'graphOBJ.dart';
 import '../Core/GMKData.dart';
 import '../Core/GMKStructure.dart';
 import '../Core/GMKCompiler.dart' as compiler;
+import '../Core/GMKCommand.dart';
 
 //
 import '../../Fertile/DPoint.dart';
@@ -35,58 +36,67 @@ import '../../Linear/Polygon.dart';
 class Monxiv {
   Vector p = Vector();
   num lam = 10;
-  bool frameAxis = false;
-  bool frameGrid = false;
   Vector size = Vector();
   late Canvas canvas;
+
+  //
+  bool frameAxis = false;
+  bool frameGrid = false;
   //
   GMKData gmkData = GMKData.none();
   GMKStructure gmkStructure = GMKStructure.newBlank();
-  //
-  Function requestToModifyGMKStructure = (Function f) {};
 
   // 用于处理手势
-  Vector _startLocalPosition = Vector.zero;
-  Vector _startMonxivP = Vector();
-  double _startMonxivLam = 1.0;
-  bool _isDragging = false;
-  List<num> monxivLamRestriction = [5, 1e3];
+  Vector _startLocalPosition = Vector.zero; //
+  Vector _startMonxivP = Vector(); //
+  double _startMonxivLam = 1.0; //
+  bool _isDragging = false; //
+  List<num> monxivLamRestriction = [5, 1e3]; //
 
   //
-  bool isObjDragging = false;
-  String objDraggingLabel = '';
+  bool isObjDragging = false; //
+  String objDraggingLabel = ''; //
+
+  //选中的对象标签
+  String selectLabel = ''; //
+
+  //选中的工具
+  String toolSelect = ''; //
+  int toolStepSum = 0; //
+  List<dynamic> toolTemp = []; //
 
   //
-  String selectLabel = '';
+  num get xStart => -p.x / lam; //
+  num get xEnd => (size.x - p.x) / lam; //
+  num get yStart => -(size.y - p.y) / lam; //
+  num get yEnd => p.y / lam; //
 
-  //
-  num get xStart => -p.x / lam;
-  num get xEnd => (size.x - p.x) / lam;
-  num get yStart => -(size.y - p.y) / lam;
-  num get yEnd => p.y / lam;
-
+  //初始化时要设置size
   void setSize(Size size_) {
     size = Vector(size_.width, size_.height);
   }
 
+  //设置绘制信息
   void setGMKData(GMKData gd) {
     gmkData = gd;
   }
 
+  //设置画布
   void setCanvas(Canvas c) {
     canvas = c;
   }
 
+  //
   Color bgc = Color.fromARGB(255, 255, 255, 255);
   Color axisLabelColor = Colors.black54;
 
-  // 坐标系坐标转屏幕坐标
+  //坐标变换
   Vector c2s(Vector c) {
+    // 坐标系坐标转屏幕坐标
     return Vector(c.x * lam + p.x, -c.y * lam + p.y);
   }
 
-  // 屏幕坐标转坐标系坐标
-  Vector s2c(Vector s) {
+  Vector s2c(Vector s) { // 屏幕坐标转坐标系坐标
     return Vector((s.x - p.x) / lam, -(s.y - p.y) / lam);
   }
 
@@ -111,16 +121,19 @@ class Monxiv {
     print(tapCP.toString());
 
     String lb = select(tapCP);
-    if (lb != '') {
-      isObjDragging = true;
-      objDraggingLabel = lb;
-      selectLabel = lb;
-      print('开始拖拽${lb}');
-    } else {
-      print('取消拖拽${objDraggingLabel}');
-      isObjDragging = false;
-      objDraggingLabel = '';
-      selectLabel = '';
+    if (toolSelect == '') {
+      if (lb != '') {
+        isObjDragging = true;
+        objDraggingLabel = lb;
+        selectLabel = lb;
+        print('开始拖拽${lb}');
+      } else {
+        print('取消拖拽${objDraggingLabel}');
+        isObjDragging = false;
+        objDraggingLabel = '';
+        selectLabel = '';
+        toolSelect = '';
+      }
     }
   }
 
@@ -128,10 +141,6 @@ class Monxiv {
   void handleScaleUpdate(ScaleUpdateDetails details) {
     print('handleScaleUpdate');
     if (details.scale != 1.0) {
-      // 缩放
-      //double newScale = _startMonxivLam * details.scale;
-      // 缩放范围
-      //lam = newScale.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
     } else if (details.localFocalPoint != _startLocalPosition.offset) {
       // 平移
       Vector sp = Vector(
@@ -157,6 +166,7 @@ class Monxiv {
                   labelR,
                   gmkData.data[label_]?.obj.thetaClosestP(Vector(cp.x, cp.y)),
                 ]);
+              default:
             }
           case const ('Circle'):
           // 其他理论上不做处理
@@ -187,16 +197,13 @@ class Monxiv {
       Vector pointerScreenPos = Vector(event.position.dx, event.position.dy);
       // 转换为世界坐标
       Vector pointerWorldPos = s2c(pointerScreenPos);
-
       // 计算缩放因子
       num zoomFactor = event.scrollDelta.dy > 0 ? 0.9 : 1.1;
       num newLam = lam * zoomFactor;
       newLam = newLam.clamp(monxivLamRestriction[0], monxivLamRestriction[1]);
-
       // 调整 p，使得 pointerWorldPos 的屏幕坐标不变
       p.x = pointerScreenPos.x - pointerWorldPos.x * newLam;
       p.y = pointerScreenPos.y + pointerWorldPos.y * newLam;
-
       // 更新缩放因子
       lam = newLam;
     }
@@ -218,9 +225,103 @@ class Monxiv {
     Vector tapCP = s2c(tapSP);
 
     String lb = select(tapCP);
-    selectLabel = lb;
+
+    String newLabel() => DateTime.now().millisecondsSinceEpoch.toString();
 
     print("单击：${tapCP.toString()}");
+    if (toolSelect == 'Point') {
+      //点工具
+      if (lb == '') {
+        //自由点
+        gmkStructure.addStep(
+          GMKCommand('P:v', 'P{${newLabel()}}', [tapCP.copy()]),
+        );
+      } else {
+        //对象上取点
+        num index = gmkData.data[lb]?.obj.thetaClosestP(tapCP.copy());
+        gmkStructure.addStep(
+          GMKCommand('IndexP', 'P{${newLabel()}}', ['#label<$lb>', index]),
+        );
+      }
+    } else if (toolSelect == 'Line') {
+      //直线工具
+      toolStepSum = 2;
+      if (lb == '') {
+        //新建点作直线
+        String p1Label = newLabel();
+        gmkStructure.addStep(GMKCommand('P:v', 'P{$p1Label}', [tapCP.copy()]));
+        toolTemp.add('#label<P{$p1Label}>');
+        selectLabel = p1Label;
+        if (toolTemp.length == toolStepSum) {
+          String lLabel = newLabel();
+          print(toolTemp);
+          gmkStructure.addStep(GMKCommand('L', 'L{$lLabel}', toolTemp));
+          toolTemp = [];
+          selectLabel = 'L{$lLabel}';
+        }
+      } else {
+        //对象上取点
+        toolTemp.add('#label<$lb>');
+        selectLabel = lb;
+        if (toolTemp.length == toolStepSum) {
+          gmkStructure.addStep(GMKCommand('L', 'L{${newLabel()}}', toolTemp));
+          toolTemp = [];
+          selectLabel = 'L{${newLabel()}}';
+        }
+      }
+    } else if (toolSelect == 'Circle') {
+      //圆工具
+      toolStepSum = 2;
+      if (lb == '') {
+        //新建点作圆
+        toolTemp.add(tapCP.copy());
+        selectLabel = lb;
+        if (toolTemp.length == toolStepSum) {
+          gmkStructure.addStep(
+            GMKCommand('C:op', 'C{${newLabel()}}', toolTemp),
+          );
+          toolTemp = [];
+          selectLabel = 'C{${newLabel()}}';
+        }
+      } else {
+        //对象上取点
+        toolTemp.add('#label<$lb>');
+        selectLabel = lb;
+        if (toolTemp.length == toolStepSum) {
+          gmkStructure.addStep(
+            GMKCommand('C:op', 'C{${newLabel()}}', toolTemp),
+          );
+          toolTemp = [];
+          selectLabel = 'L{${newLabel()}}';
+        }
+      }
+    } else if (toolSelect == 'Triangle') {
+      toolStepSum = 3;
+      if (lb == '') {
+        toolTemp.add(tapCP.copy());
+        selectLabel = lb;
+        if (toolTemp.length == toolStepSum) {
+          gmkStructure.addStep(
+            GMKCommand('Tri', 'Tri{${newLabel()}}', toolTemp),
+          );
+          toolTemp = [];
+          selectLabel = 'Tri{${newLabel()}}';
+        }
+      } else {
+        //对象上取点
+        toolTemp.add('#label<$lb>');
+        selectLabel = lb;
+        if (toolTemp.length == toolStepSum) {
+          gmkStructure.addStep(
+            GMKCommand('Tri', 'Tri{${newLabel()}}', toolTemp),
+          );
+          toolTemp = [];
+          selectLabel = 'Tri{${newLabel()}}';
+        }
+      }
+    } else {
+      selectLabel = lb;
+    }
   }
 
   String select(tcp) {
@@ -232,16 +333,16 @@ class Monxiv {
       if (gObj.style.show) {
         switch (gObj.type) {
           case const ("Vector"):
-            dx =1+ (tcp - gObj.obj).len * lam;
+            dx = 1 + (tcp - gObj.obj).len * lam;
           case const ('Circle'):
             dx = 6 + gObj.obj.disP(tcp) * lam;
           case const ('Line'):
             dx = 5 + gObj.obj.disP(tcp) * lam;
           case const ('DPoint'):
-            dx = gObj.obj
-                .disP(tcp)
-                .min * lam;
+            dx = gObj.obj.disP(tcp).min * lam;
           case const ('Polygon'):
+            dx = 3 + gObj.obj.disP(tcp) * lam;
+          case const ('Triangle'):
             dx = 3 + gObj.obj.disP(tcp) * lam;
           case const ('Conic0'):
             dx = 5 + gObj.obj.disP(tcp) * lam;

@@ -4,11 +4,11 @@ import 'dart:ui';
 //
 Color red = Color.fromARGB(255, 224, 6, 12);
 Color blue = Color.fromARGB(255, 21, 101, 192);
-Color cyan = Color.fromARGB(255, 88, 246, 246);
+Color cyan = Color(0xFF00b8a3);
 Color amber = Color.fromARGB(255, 248, 196, 46);
 Color pakoo = Color.fromARGB(255, 153, 102, 255);
 Color brown = Color.fromARGB(255, 153, 102, 0);
-Color gray = Color.fromARGB(255, 85, 85, 85);
+Color gray = Color.fromARGB(255, 123, 123, 123);
 Color teal = Color.fromARGB(255, 0, 128, 128);
 Color forest = Color.fromARGB(255, 0, 153, 0);
 Color yduo = Color.fromARGB(255, 102, 204, 255);

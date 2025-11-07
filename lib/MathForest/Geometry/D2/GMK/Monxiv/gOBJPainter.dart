@@ -36,6 +36,7 @@ import '../../Linear/Vector.dart';
 import '../../Linear/Line.dart';
 import '../../Linear/Dots.dart';
 import '../../Linear/Polygon.dart';
+import '../../Linear/Triangle.dart';
 
 //
 
@@ -92,11 +93,12 @@ final Map<String, Function> gPainter = {
         num time = monxiv.gmkData.data['time']?.obj ?? 0;
 
         Vector wave(t) {
-          num h =( -1.0 * t * (t - 1));
+          num h = (-1.0 * t * (t - 1));
           return u * (sin(10.0 * t * v.len + 2.5 * time) * 0.16 * h) +
               v * t +
               dp.p2;
         }
+
         drawT2PFunction(
           wave,
           monxiv,
@@ -305,6 +307,28 @@ final Map<String, Function> gPainter = {
 
     if (gOBJ.style.labelShow) {
       drawText('Polygon: $label', polygon.vertices.first, 12, 500, monxiv);
+    }
+  },
+
+  'Triangle': (String label, GraphOBJ gOBJ, Monxiv monxiv) {
+
+    Triangle tri = gOBJ.obj;
+    Paint paint = Paint()
+      ..color = gOBJ.style.color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5 * gOBJ.style.size;
+    drawTriangle(tri, monxiv, paint: paint);
+
+    if (monxiv.selectLabel == gOBJ.label) {
+      Paint sPaint = Paint()
+        ..color = gOBJ.style.color.withAlpha(88)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 9.0 * gOBJ.style.size;
+      drawTriangle(tri, monxiv, paint: sPaint);
+    }
+
+    if (gOBJ.style.labelShow) {
+      drawText('Polygon: $label', tri.a, 12, 500, monxiv);
     }
   },
 };

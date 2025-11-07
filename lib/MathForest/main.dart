@@ -38,6 +38,7 @@ export 'Geometry/D2/Fertile/TPoint.dart';
 export 'Geometry/D2/GMK/Core/GMKCore.dart';
 export 'Geometry/D2/GMK/Core/GMKData.dart';
 export 'Geometry/D2/GMK/Core/GMKCommand.dart';
+export 'Geometry/D2/GMK/Core/GMKStyle.dart';
 
 // 绘图器
 export 'Geometry/D2/GMK/Monxiv/monxiv.dart';

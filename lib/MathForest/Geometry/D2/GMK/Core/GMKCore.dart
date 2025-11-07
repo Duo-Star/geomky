@@ -18,11 +18,18 @@ class GMKCore {
   GMKData gmkData = GMKData({'time': GraphOBJ(0.0, 'time', 'num <TIME>', gStyle.GOBJStyle.none())});
   num time = 0;
 
+  GMKCore();
+
   bool setTime(num t){
     time = t;
     return true;
   }
 
+  void clear() {
+     gmkStructure = GMKStructure.newBlank();
+     gmkData = GMKData({'time': GraphOBJ(0.0, 'time', 'num <TIME>', gStyle.GOBJStyle.none())});
+     time = 0;
+  }
 
   GMKStructure loadCode(String code) {
     gmkStructure = compiler.goCompiler(code);

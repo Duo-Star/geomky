@@ -30,7 +30,7 @@ import '../../Linear/Vector.dart';
 import '../../Linear/Line.dart';
 import '../../Linear/Dots.dart';
 import '../../Linear/Polygon.dart';
-
+import '../../Linear/Triangle.dart';
 
 //准备一些笔
 Paint defaultPaint = Paint()
@@ -62,7 +62,6 @@ Paint gridPaint = Paint()
   ..color = Color.fromARGB(60, 0, 0, 0)
   ..style = PaintingStyle.stroke
   ..strokeWidth = 1.5;
-
 
 //
 void drawText(
@@ -97,12 +96,23 @@ bool drawFramework(Monxiv monxiv) {
   num xEnd = monxiv.xEnd;
   num yStart = monxiv.yStart;
   num yEnd = monxiv.yEnd;
-  monxiv.canvas.drawColor(monxiv.bgc, BlendMode.srcOver);
+  monxiv.canvas.drawColor(
+    monxiv.gmkStructure.gmkStyle.monxiv,
+    BlendMode.srcOver,
+  );
   if (monxiv.frameAxis) {
     drawSegmentBy2P(
-        Vector(xStart, 0), Vector(xEnd, 0), monxiv, paint: axisPaint);
+      Vector(xStart, 0),
+      Vector(xEnd, 0),
+      monxiv,
+      paint: axisPaint,
+    );
     drawSegmentBy2P(
-        Vector(0, yStart), Vector(0, yEnd), monxiv, paint: axisPaint);
+      Vector(0, yStart),
+      Vector(0, yEnd),
+      monxiv,
+      paint: axisPaint,
+    );
     int drawX = xStart.floor() - 1;
     if (drawX < 1) drawX = 1;
     int drawX_ = xEnd.floor() + 1;
@@ -183,6 +193,20 @@ void drawPolygon(Polygon poly, Monxiv monxiv, {Paint? paint}) {
     Vector vi = monxiv.c2s(vertices[i]);
     path.lineTo(vi.x.toDouble(), vi.y.toDouble());
   }
+  path.close();
+  monxiv.canvas.drawPath(path, usedPaint);
+}
+
+void drawTriangle(Triangle poly, Monxiv monxiv, {Paint? paint}) {
+  final usedPaint = paint ?? defaultPaint;
+  final path = Path();
+  //
+  Vector v1 = monxiv.c2s(poly.a);
+  path.moveTo(v1.x.toDouble(), v1.y.toDouble());
+  Vector v2 = monxiv.c2s(poly.b);
+  path.lineTo(v2.x.toDouble(), v2.y.toDouble());
+  Vector v3 = monxiv.c2s(poly.c);
+  path.lineTo(v3.x.toDouble(), v3.y.toDouble());
   path.close();
   monxiv.canvas.drawPath(path, usedPaint);
 }
@@ -280,7 +304,11 @@ void drawT2PFunction(
 
 void drawDottedLine(Line l, Monxiv monxiv, {Paint? paint}) {
   final Paint usedPaint = paint ?? defaultLinePaint;
-  for (num t = -500/ monxiv.lam; t <= 1000/ monxiv.lam; t += 20 / monxiv.lam) {
+  for (
+    num t = -500 / monxiv.lam;
+    t <= 1000 / monxiv.lam;
+    t += 20 / monxiv.lam
+  ) {
     Vector p = l.p + l.v.unit * t;
     drawPoint(p, monxiv, paint: usedPaint, size: 1.0);
   }
