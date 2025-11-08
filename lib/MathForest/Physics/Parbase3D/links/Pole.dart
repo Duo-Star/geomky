@@ -1,5 +1,5 @@
-import '../Particle.dart';
-import '../../../Geometry/D2/Linear/Vector.dart';
+import '../Particle3D.dart';
+import '../../../Geometry/D3/Linear/Vec3.dart';
 import '../../../Algebra/Functions/Main.dart' as funcs;
 
 class Pole {
@@ -8,8 +8,8 @@ class Pole {
 
   Pole(this.k, this.l);
 
-  Vector pLINKp(Particle pa, Particle pb){
-    Vector dp = pa.p - pb.p;
+  Vec3 pLINKp(Particle3D pa, Particle3D pb){
+    Vec3 dp = pa.p - pb.p;
     num f = funcs.openNNum(dp.len-l)*k;
     return dp.unit * f;
   }

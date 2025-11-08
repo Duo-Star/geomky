@@ -1,9 +1,9 @@
-import '../../Geometry/D3/Linear/Vec3.dart';
+import '../../Geometry/D2/Linear/Vector.dart';
 
 class Particle {
-  Vec3 p = Vec3();
-  Vec3 v = Vec3();
-  Vec3 a = Vec3();
+  Vector p = Vector();
+  Vector v = Vector();
+  Vector a = Vector();
   num m = 1;
   num q = 1;
 
@@ -15,7 +15,7 @@ class Particle {
     return true;
   }
 
-  bool setF (Vec3 f){
+  bool setF (Vector f){
     a = f * (1/m);
     return true;
   }

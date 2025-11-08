@@ -106,6 +106,9 @@ class Monxiv {
     lam = 100;
   }
 
+
+
+
   // 处理缩放开始
   void handleScaleStart(ScaleStartDetails details) {
     print('开始移动');

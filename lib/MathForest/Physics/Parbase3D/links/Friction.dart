@@ -1,5 +1,5 @@
-import '../Particle.dart';
-import '../../../Geometry/D2/Linear/Vector.dart';
+import '../Particle3D.dart';
+import '../../../Geometry/D3/Linear/Vec3.dart';
 
 class Friction {
   num f = .5;
@@ -10,13 +10,13 @@ class Friction {
 
   Friction(this.f,this.s,this.mode);
 
-  Vector pLINK(Particle p) {
+  Vec3 pLINK(Particle3D p) {
     switch (mode){
       case 'Static':
         return -p.v.unit*f;
       case 'Air':
         return -p.v * p.v.len * s;
     }
-    return Vector();
+    return Vec3();
   }
 }

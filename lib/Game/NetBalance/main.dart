@@ -1,54 +1,46 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 //
-import 'UI/gmkCodeEditor.dart';
-import 'UI/toolBar/stateBtn.dart' as state_btn;
-import 'UI/toolBar/filePage.dart' as file_page;
-import 'UI/toolBar/linearPage.dart' as linear_page;
-import 'UI/toolBar/conicPage.dart' as conic_page;
-import 'UI/toolBar/fertilePage.dart' as fertile_page;
-import 'UI/toolBar/elementPage.dart' as element_page;
-import 'UI/toolBar/attributePage.dart' as attribute_page;
+import '../../MathForest/main.dart';
+import '../../MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
+import '../../MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as g_lib;
 
 //
-import 'MathForest/main.dart';
-import 'MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
-import 'MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as g_lib;
-
+import '../../MathForest/Geometry/D2/GMK/Monxiv/basicPainter.dart' as painter;
 //
-import 'MathForest/Geometry/D2/GMK/Monxiv/basicPainter.dart' as painter;
-
-//
-import 'UI/debugLibrary.dart' as debug_library;
-import 'demoGMK.dart' as demo_gmk;
+import 'hua.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 // 状态类 - 用于在GMK运算和绘图之间传递数据
-class GMKState {
+class GameState {
   GMKData gmkData = GMKData({});
   double time = 0.0;
-  GMKState();
+  List<Hua> huas = [];
+
+  GameState();
 
   // 复制方法，用于在状态更新时保持引用不变
-  GMKState copy() {
-    final newState = GMKState();
+  GameState copy() {
+    final newState = GameState();
     newState.gmkData = gmkData;
     newState.time = time;
+    newState.huas = huas;
     return newState;
   }
 }
 
 class MyPainter extends CustomPainter {
   final Monxiv monxiv;
-  final GMKState gmkState; // 接收GMK状态
+  final GameState gameState; // 接收GMK状态
 
-  MyPainter({required this.monxiv, required this.gmkState});
+  MyPainter({required this.monxiv, required this.gameState});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,27 +49,67 @@ class MyPainter extends CustomPainter {
       monxiv.reset();
     }
     monxiv.setCanvas(canvas);
-    GMKData gmkData = gmkState.gmkData;
+    GMKData gmkData = gameState.gmkData;
     monxiv.setGMKData(gmkData);
+    monxiv.frameAxis = true;
+    monxiv.frameGrid = true;
     monxiv.draw();
+    //
+
+    /*
+   num  R = 6.0;
+    num  r = 2.2;
+   int  lineCount = 100;
+    for (int i = 0; i < lineCount; i++) {
+      num  d = 1.0 + (i / lineCount) * 5.0;
+      x(t) => (R - r) * cos(t) + d * cos(((R - r) / r) * t);
+      y(t) => (R - r) * sin(t) - d * sin(((R - r) / r) * t);
+      painter.drawT2PFunction((t){
+        return Vector(x(t), y(t));
+      }, monxiv, from: 0, to: 88,dt: 0.1, paint: Paint()..color=
+      Color(Random().nextInt(0xaaFFFFFF) + 0xaa000000)..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+      );
+    }
+     */
+
+    /*
+    for (num theta = 0; theta < 2 * pi; theta += 0.01) {
+      painter.drawT2PFunction((t){
 
 
-    Dots ds = Dots.randomFill(
-      1000,
-      RandomMaster.normal(mean: 5, stddev: 1.0),
-      RandomMaster.normal(mean: 5, stddev: 1.0),
+        return Vector.newAL(theta, 1)+Vector.newAL(theta+pi*.5, 1)*t;
+      }, monxiv, from: -100, to: 100, paint: Paint()..color=
+         Color(Random().nextInt(0xaaFFFFFF) + 0xaa000000)..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5
+      );
+    }
+
+    painter.drawT2PFunction((t){
+      return Vector.newAL(10*t,t);
+    }, monxiv, from: 0, to: 100,dt: 0.01, paint: Paint()..color=
+    Color(Random().nextInt(0xFFFFFFFF) + 0xFF000000)..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
     );
-    Polygon polygon = ds.tight;
-    painter.drawDots(ds, monxiv);
-    painter.drawPolygon(polygon, monxiv);
-     //*/
+*/
 
-    //print(gmkData.data['A']);
+    //
+    for (Hua itemHua in gameState.huas) {
+      painter.drawSegmentBy2P(
+        itemHua.p1.p,
+        itemHua.p2.p,
+        monxiv,
+        paint: Paint()
+          ..color = Color(0xaa000000)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5,
+      );
+      //  painter.drawSegmentBy2P(itemHua.p1.p+, p2_, monxiv)
+    }
   }
 
   @override
   bool shouldRepaint(covariant MyPainter oldDelegate) {
-    //return monxiv != oldDelegate.monxiv || physicsState != oldDelegate.physicsState;
     return true;
   }
 }
@@ -95,27 +127,6 @@ class MyApp extends StatelessWidget {
         ),
       ),
       home: const MyHomePage(title: 'GeoMKY', code: ''),
-      routes: {
-        '/gml-editor': (context) => const GmkEditorPage(),
-
-        '/gmk': (context) {
-          // 从路由参数中获取传递的 code
-          final args = ModalRoute.of(context)!.settings.arguments;
-          String code = '';
-
-          if (args is Map<String, String>) {
-            code = args['code'] ?? '默认代码（未传参）';
-          } else {
-            code = '参数格式错误，使用默认代码';
-          }
-
-          // 返回你的目标页面，并传入动态 code
-          return MyHomePage(
-            title: 'GML 编辑器',
-            code: code, // ✅ 动态代码内容
-          );
-        },
-      },
     );
   }
 }
@@ -139,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage>
   Monxiv monxiv = Monxiv();
 
   // 物理状态
-  GMKState _gmkState = GMKState();
+  GameState gameState = GameState();
   GMKCore gmkCore = GMKCore();
 
   // 物理模拟参数
@@ -149,15 +160,24 @@ class _MyHomePageState extends State<MyHomePage>
   void initState() {
     super.initState();
 
-    try {
-      // 加载源码
+    for (var i in List.generate(5, (index) => index)) {
+      gameState.huas.add(
+        Hua.newHua(
+            Vector.randomXY(
+              RandomMaster.normal(mean: 0, stddev: 1.0),
+              RandomMaster.normal(mean: 0, stddev: 1.0),
+            ),
+            1,
+          )
+          ..dFire.n1 = 10
+          ..dFire.n2 = 10,
+      );
+    }
 
+    try {
       String code = widget.code;
       code = '''
->style deep-ocean
-@c is C of .O 1
-@tri1 is Tri of .O .I .J
-#tri1 red
+>style castle
 
       ''';
       print(code);
@@ -190,18 +210,24 @@ class _MyHomePageState extends State<MyHomePage>
 
   void _updateGMK(Timer timer) {
     // 更新物理状态
-    GMKState newState = _gmkState.copy();
+    GameState newState = gameState.copy();
 
     // GMK 运行
     _runGMK(newState, physicsTimeStep);
 
+    PEnv env = PEnv();
+    env.dt = physicsTimeStep;
+    for (Hua itemHua in gameState.huas) {
+      itemHua.update(env);
+    }
+
     // 更新状态（在下一帧绘制时生效）
     setState(() {
-      _gmkState = newState;
+      gameState = newState;
     });
   }
 
-  void _runGMK(GMKState state, double dt) {
+  void _runGMK(GameState state, double dt) {
     monxiv.gmkStructure = gmkCore.gmkStructure;
     gmkCore.setTime(state.time);
     state.gmkData = gmkCore.run();
@@ -261,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage>
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     return CustomPaint(
-                      painter: MyPainter(monxiv: monxiv, gmkState: _gmkState),
+                      painter: MyPainter(monxiv: monxiv, gameState: gameState),
                       size: Size(constraints.maxWidth, constraints.maxHeight),
                     );
                   },
@@ -277,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage>
                 initialIndex: () {
                   return selectLabel == '' ? 1 : 2;
                 }(),
-                length: 6,
+                length: 2,
                 child: Column(
                   children: [
                     Container(
@@ -300,37 +326,30 @@ class _MyHomePageState extends State<MyHomePage>
                         tabs: [
                           const Tab(text: '文件'),
                           const Tab(text: '线性'),
-                          const Tab(text: '二次'),
-                          const Tab(text: '复生'),
-                          const Tab(text: '组件'),
-                          Tab(text: '属性:$selectLabel'),
                         ],
                       ),
                     ),
                     Expanded(
                       child: TabBarView(
                         children: [
-                          //1. 文件选项卡内容 (水平滚动工具栏)
-                          file_page.page(context, gmkCore, monxiv),
-
-                          //2. 线性选项卡内容
-                          linear_page.page(context, gmkCore, monxiv),
-
-                          //3. conic选项卡
-                          conic_page.page(context, gmkCore, monxiv),
-
-                          //4. 复生内容页
-                          fertile_page.page(context, gmkCore, monxiv),
-
-                          //5. 组件
-                          element_page.page(context, gmkCore, monxiv),
-
-
-                          //6. 属性内容页
-                          attribute_page.page(context, gmkCore, monxiv),
-
-
-
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [],
+                              ),
+                            ),
+                          ),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),

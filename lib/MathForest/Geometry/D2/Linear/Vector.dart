@@ -6,6 +6,8 @@
 
 import 'dart:math' as math;
 import 'dart:ui'; // we need Offset in ui
+import '../../../Statistics/RandomMaster.dart';
+
 import '../../../Algebra/Functions/Main.dart' as funcs;
 import '../../D3/Linear/Vec3.dart';
 
@@ -142,6 +144,11 @@ class Vector {
   //
   bool isParallel(Vector other) {
     return crossLen(other) == 0.0;
+  }
+
+  //
+   static Vector randomXY(RandomMaster rmx, RandomMaster rmy) {
+    return Vector(rmx.compute(), rmy.compute());
   }
 
 

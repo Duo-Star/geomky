@@ -2,6 +2,8 @@ library;
 
 // 基本函数
 export 'Algebra/Functions/Main.dart';
+
+
 // 方程求解器
 export 'Algebra/Solver/LinearSolver.dart';
 export 'Algebra/Solver/PolynomialSolver.dart';
@@ -67,6 +69,7 @@ export 'Statistics/RandomMaster.dart';
 
 // 粒子基物理系统
 export 'Physics/Parbase/Particle.dart';
+export 'Physics/Parbase/PEnv.dart';
 export 'Physics/Parbase/links/Electromagnetic.dart';
 export 'Physics/Parbase/links/Friction.dart';
 export 'Physics/Parbase/links/Gravity.dart';

@@ -1,5 +1,5 @@
 import '../Particle.dart';
-import '../../../Geometry/D3/Linear/Vec3.dart';
+import '../../../Geometry/D2/Linear/Vector.dart';
 
 class Spring {
   num k = 5e3;
@@ -7,8 +7,8 @@ class Spring {
 
   Spring(this.k, this.l);
 
-  Vec3 pLINKp(Particle pa, Particle pb){
-    Vec3 dp = pa.p - pb.p;
+  Vector pLINKp(Particle pa, Particle pb){
+    Vector dp = pa.p - pb.p;
     num f = (dp.len-l)*k;
     return dp.unit * f;
   }
