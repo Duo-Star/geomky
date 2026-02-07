@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../main.dart';
+import '../main_test.dart';
 
 // GML的关键字和类型
 const Set<String> gmlKeywords = {'is', 'of'};

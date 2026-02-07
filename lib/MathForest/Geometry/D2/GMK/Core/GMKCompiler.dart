@@ -3,14 +3,16 @@ library;
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:geomky/MathForest/Geometry/D2/GMK/Monxiv/gOBJStyle.dart';
 
+//
 import '../Monxiv/gOBJStyle.dart' as gStyle;
 
+//
 import 'GMKCommand.dart';
 import 'GMKStructure.dart';
 import 'GMKLib.dart' as g_lib;
 
+//
 import '../../Linear/Vector.dart';
 import '../../Conic/Circle.dart';
 import '../../../../Algebra/Functions/Main.dart' as funcs;
@@ -226,7 +228,6 @@ GMKStructure goCompiler(String source) {
   }
   //应用主题
   structure.applyStyle();
-
   return structure;
 }
 

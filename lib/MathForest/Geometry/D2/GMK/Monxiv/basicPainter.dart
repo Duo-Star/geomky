@@ -294,7 +294,7 @@ void drawT2PFunction(
   Path p = Path();
   Vector initVector = monxiv.c2s(f(0));
   p.moveTo(initVector.x.toDouble(), initVector.y.toDouble());
-  for (num theta = (from ?? 0); theta <= (to ?? 5.0); theta += (dt ?? 50)) {
+  for (num theta = (from ?? 0); theta <= (to ?? 5.0); theta += (dt ?? .1)) {
     Vector nowVector = monxiv.c2s(f(theta));
     p.lineTo(nowVector.x.toDouble(), nowVector.y.toDouble());
   }

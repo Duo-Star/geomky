@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 //
 import 'UI/gmkCodeEditor.dart';
-import 'UI/toolBar/stateBtn.dart' as state_btn;
+import 'UI/toolBar/Btn.dart' as state_btn;
 import 'UI/toolBar/filePage.dart' as file_page;
 import 'UI/toolBar/linearPage.dart' as linear_page;
 import 'UI/toolBar/conicPage.dart' as conic_page;
@@ -61,7 +62,17 @@ class MyPainter extends CustomPainter {
     monxiv.setGMKData(gmkData);
     monxiv.draw();
 
+/*
+    painter.drawT2PFunction((t){
+      num x= t;
+      return Vector(t, (math.pow(x,(x+1)))/(math.pow((x+1), x)));
+    },dt:0.005, monxiv);
 
+ */
+
+
+
+    /*
     Dots ds = Dots.randomFill(
       1000,
       RandomMaster.normal(mean: 5, stddev: 1.0),
@@ -70,7 +81,7 @@ class MyPainter extends CustomPainter {
     Polygon polygon = ds.tight;
     painter.drawDots(ds, monxiv);
     painter.drawPolygon(polygon, monxiv);
-     //*/
+     */
 
     //print(gmkData.data['A']);
   }
@@ -152,16 +163,23 @@ class _MyHomePageState extends State<MyHomePage>
     try {
       // 加载源码
 
-      String code = widget.code;
+      String? code = widget.code;
       code = '''
 >style deep-ocean
 @c is C of .O 1
 @tri1 is Tri of .O .I .J
 #tri1 red
 
-      ''';
+''';
+
+      code = '''
+@p1 is P of 1 1
+@p2 is P of 2 1
+@c1_1 is P of <p1> <p2>
+''';
+      code = demo_gmk.demo['regularPentagonal'];
       print(code);
-      gmkCore.loadCode(code);
+      gmkCore.loadCode(code!);
       //
     } catch (e, stackTrace) {
       if (kDebugMode) {
@@ -303,7 +321,7 @@ class _MyHomePageState extends State<MyHomePage>
                           const Tab(text: '二次'),
                           const Tab(text: '复生'),
                           const Tab(text: '组件'),
-                          Tab(text: '属性:$selectLabel'),
+                          Tab(text: '属性 - ${monxiv.getSelectType()}: $selectLabel'),
                         ],
                       ),
                     ),
@@ -325,12 +343,8 @@ class _MyHomePageState extends State<MyHomePage>
                           //5. 组件
                           element_page.page(context, gmkCore, monxiv),
 
-
                           //6. 属性内容页
                           attribute_page.page(context, gmkCore, monxiv),
-
-
-
                         ],
                       ),
                     ),
@@ -368,40 +382,7 @@ class _MyHomePageState extends State<MyHomePage>
                           ),
                         ),
                         const SizedBox(height: 6),
-                        /*
-                         const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            OutlinedButton(
-                              onPressed: () {},
-                              child: Text(
-                                '取消',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: gmkCore.gmkStructure.gmkStyle.primary,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            ElevatedButton(
-                              onPressed: () {},
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor:
-                                    gmkCore.gmkStructure.gmkStyle.primary,
-                              ),
-                              child: Text(
-                                '确定',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color:
-                                      gmkCore.gmkStructure.gmkStyle.onPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-            */
+
                       ],
                     ),
                   ),

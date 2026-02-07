@@ -7,6 +7,8 @@ import '../../../Algebra/Trunk/Fertile/DNum.dart';
 import '../../../Algebra/Trunk/Fertile/QNum.dart';
 import '../Fertile/DPoint.dart';
 import '../Fertile/QPoint.dart';
+
+
 /*
 为保证广泛性，我们使用 p + lam * v 代替 k * x + b
 ，另外 我不喜欢 Ax + By +C =0

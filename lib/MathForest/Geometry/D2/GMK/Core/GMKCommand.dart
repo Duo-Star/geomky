@@ -11,4 +11,9 @@ class GMKCommand {
   GMKCommand(this.method, this.label, this.factor) {
     type  = (g_lib.lib[method]?[0]) ?? '?unType';
   }
+
+  @override
+  String toString() {
+   return 'GMKCommand: $label(type:$type) is $method of ${factor.toString()}';
+  }
 }

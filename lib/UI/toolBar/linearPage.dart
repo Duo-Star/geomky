@@ -11,7 +11,7 @@ import '../../MathForest/Geometry/D2/GMK/Core/GMKCompiler.dart' as compiler;
 import '../../MathForest/Geometry/D2/GMK/Core/GMKLib.dart' as g_lib;
 
 //
-import 'stateBtn.dart' as state_btn;
+import 'Btn.dart' as state_btn;
 
 
 SingleChildScrollView page(context, GMKCore gmkCore, Monxiv monxiv) {

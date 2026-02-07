@@ -1,5 +1,10 @@
 import '../../Linear/Vector.dart';
 
+/*
+这里是几何结构
+ */
+
+
 import 'GMKCommand.dart';
 import 'GMKStyle.dart';
 

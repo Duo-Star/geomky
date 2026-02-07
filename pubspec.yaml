@@ -26,6 +26,11 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # 用来在 Flutter 中运行 OpenGL ES Shader
+  flutter_gl: ^0.0.7   # 最新版请查 pub.dev
+
+  ffi: ^2.1.2
+
   # 以下将Cupertino Icons字体添加到您的应用程序中。
   # 与CupertinoIcons类一起使用可获得iOS风格图标。
   cupertino_icons: ^1.0.8
@@ -54,6 +59,8 @@ flutter:
       fonts:
         - asset: assets/fonts/MapleMono-Regular.ttf  # 指向字体文件的路径
 
+  assets:
+    - assets/shaders/fragment.glsl
 
   # 以下行确保Material Icons字体包含在您的应用程序中，
   # 以便您可以使用material Icons类中的图标。

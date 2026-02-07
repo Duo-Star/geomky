@@ -1,5 +1,13 @@
 //
+/*
+这里对几何对象的样式进行设置
+ */
+
+
+//
 import 'dart:ui';
+
+
 
 //
 Color red = Color.fromARGB(255, 224, 6, 12);

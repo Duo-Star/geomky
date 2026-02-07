@@ -106,13 +106,24 @@ class Monxiv {
     lam = 100;
   }
 
+//
+  String getSelectType() {
+    return (gmkStructure.step[selectLabel]?.type)??'';
+  }
+//
+  GMKCommand? getSelectCMD() {
+    return gmkStructure.step[selectLabel];
+  }
+//
+  GraphOBJ? getSelectOBJ() {
+    return gmkData.data[selectLabel];
+  }
 
 
 
   // 处理缩放开始
   void handleScaleStart(ScaleStartDetails details) {
     print('开始移动');
-
     _isDragging = true;
     _startLocalPosition = Vector(
       details.localFocalPoint.dx,

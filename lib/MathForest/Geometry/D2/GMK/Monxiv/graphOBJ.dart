@@ -1,6 +1,10 @@
 import 'dart:ui';
 import 'gOBJStyle.dart' as gStyle;
 
+/*
+这里是几何对象
+ */
+
 class GraphOBJ {
   dynamic obj;
   String label = '';

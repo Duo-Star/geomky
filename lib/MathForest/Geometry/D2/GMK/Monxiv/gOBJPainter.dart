@@ -1,5 +1,10 @@
 library;
+/*
+这是针对各个几何对象的绘图方法
+ */
 
+
+//
 import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:flutter/gestures.dart';

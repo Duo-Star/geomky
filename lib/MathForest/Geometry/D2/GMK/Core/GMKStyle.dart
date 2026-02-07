@@ -1,5 +1,8 @@
 import 'dart:ui';
+/*
+这里设置GMK全局样式
 
+ */
 class GMKStyle {
   //是否夜间模式
   bool night = false;

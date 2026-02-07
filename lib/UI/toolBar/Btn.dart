@@ -150,3 +150,34 @@ Row simpleStateBtn(Monxiv monxiv, List<String> toolName) {
     ],
   );
 }
+
+
+//
+Row simpleBtn(Monxiv monxiv, String s, Function f) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      OutlinedButton(
+        onPressed: f(),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(0, 45),
+          foregroundColor: Colors.black,
+          side: const BorderSide(
+            color: Color.fromARGB(0, 0, 0, 0),
+            width: 0,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(0),
+          ),
+        ),
+        child: Text(
+          'Demo',
+          style: TextStyle(
+            color: monxiv.gmkStructure.gmkStyle.onPrimaryContainer,
+          ),
+        ),
+      ),
+      VerticalDivider(width: 1, color: Colors.black54),
+    ],
+  );
+}
