@@ -24,7 +24,9 @@
 | `autumn` | `秋日` | `observatory` | `观象台`  |
 | `polar`  | `极地` | `pakoo-night` | `果谷之夜` |
 | `moon`   | `月球` | `ruins`       | `遗迹`   |
+
 设置全局主题
+
 ```
 >style moon
 ```

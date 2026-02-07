@@ -1,0 +1,31 @@
+name: Deploy to Vercel
+on:
+  push:
+    branches:
+      - master  # 当你向 main 分支推送代码时触发。如果你的主分支叫 master，请修改此处。
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. 拉取代码
+      - uses: actions/checkout@v4
+
+      # 2. 安装 Flutter 环境
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      # 3. 获取依赖并构建 Web 版
+      - run: flutter pub get
+      - run: flutter build web --release
+
+      # 4. 将构建产物部署到 Vercel
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }} # 稍后在 GitHub 设置
+          vercel-org-id: ${{ secrets.ORG_ID }}     # 稍后在 GitHub 设置
+          vercel-project-id: ${{ secrets.PROJECT_ID }} # 稍后在 GitHub 设置
+          working-directory: ./build/web            # 只部署构建后的 web 文件夹
+          vercel-args: '--prod'                     # 直接部署到生产环境
